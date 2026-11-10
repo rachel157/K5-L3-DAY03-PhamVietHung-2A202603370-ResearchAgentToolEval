@@ -18,6 +18,11 @@ from .social_search.tool import search_tweets
 from .send.tool import send_telegram
 from .lookup.tool import web_search
 
+from tools.github_search.tool import github_search
+from tools.hackernews.tool import hackernews
+from tools.wikipedia.tool import wikipedia
+from tools.save_note.tool import save_note
+
 
 # NOTE (starter_v0): tool names here are intentionally vague. These keys are the
 # names the model sees AND the names data/eval_base.json + data/eval_research_extension.json
@@ -39,6 +44,13 @@ TOOL_FUNCTIONS = {
     # then declare it in artifacts/tools.yaml and run `pytest tests/test_tool_contract.py`.
 }
 
+# Thêm vào từ điển TOOL_FUNCTIONS:
+TOOL_FUNCTIONS.update({
+    "github_search": github_search,
+    "hackernews": hackernews,
+    "wikipedia": wikipedia,
+    "save_note": save_note,
+})
 
 def load_tool_declarations(path: Path) -> list[dict[str, Any]]:
     return yaml.safe_load(Path(path).read_text(encoding="utf-8"))["tools"]
