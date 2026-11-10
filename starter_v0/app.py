@@ -382,23 +382,7 @@ for msg in st.session_state.messages:
         col_agent, col_empty = st.columns([4, 1])
         with col_agent:
             with st.chat_message("assistant", avatar="🌿"):
-                tool_rounds = msg.get("rounds", [])
-                # Only show rounds that ACTUALLY contain tool calls (avoid empty Vòng 2)
-                actual_rounds = [r for r in tool_rounds if r.get("tool_calls")]
-                if actual_rounds:
-                    total_calls = sum(len(r.get("tool_calls", [])) for r in actual_rounds)
-                    tool_badges = ", ".join([f"`{tc['name']}`" for r in actual_rounds for tc in r.get("tool_calls", [])])
-                    with st.expander(f"🛠️ Đã thực thi {total_calls} tool call(s): {tool_badges}", expanded=False):
-                        for r in actual_rounds:
-                            st.markdown(f"**Vòng {r.get('round', 1)}:**")
-                            for tc in r.get("tool_calls", []):
-                                st.markdown(f"- 🔧 **Gọi Tool:** `{tc.get('name')}`")
-                                st.json(tc.get("args", {}), expanded=False)
-                            for res in r.get("tool_results", []):
-                                st.markdown(f"- 📥 **Kết quả từ:** `{res.get('tool')}`")
-                                st.json(res.get("result", {}), expanded=False)
-                
-                # Assistant response text cleanly inside the card
+                # Clean final answer only
                 st.markdown(msg["content"])
 
 
@@ -449,7 +433,13 @@ if prompt_to_process:
     # 1. Lock state immediately to prevent spamming
     st.session_state.is_running = True
 
-    # 2. Append User Message
+    # 2. Render User Message IMMEDIATELY on the right before agent starts
+    col_empty, col_user = st.columns([1, 4])
+    with col_user:
+        with st.chat_message("user", avatar="🧑‍💻"):
+            st.markdown(f"**Bạn**\n\n{prompt_to_process}")
+
+    # 3. Append to history state
     st.session_state.messages.append({"role": "user", "content": prompt_to_process})
     st.session_state.turn_index += 1
     transcript, transcript_path = get_or_create_transcript()
@@ -470,83 +460,78 @@ if prompt_to_process:
         "tool_events": [],
     }
 
-    # 3. Dynamic Animated Loading & Step-by-Step Progress
-    with st.status("🌿 Agent đang phân tích yêu cầu và điều phối công cụ...", expanded=True) as status:
-        st.write("📖 **Bước 1:** Đọc quy tắc routing và đối chiếu hệ thống công cụ...")
-        time.sleep(0.3)
+    # 4. Render Agent response on the left with clean disappearing spinner
+    col_agent, col_empty = st.columns([4, 1])
+    with col_agent:
+        with st.chat_message("assistant", avatar="🌿"):
+            loading_placeholder = st.empty()
+            with loading_placeholder:
+                with st.spinner("🌿 Đang suy luận và thực thi công cụ..."):
+                    try:
+                        provider = make_provider(provider_name)
+                        selected_model = getattr(provider, "default_model", None)
+                        if transcript.get("model") is None:
+                            transcript["model"] = selected_model
 
-        try:
-            provider = make_provider(provider_name)
-            selected_model = getattr(provider, "default_model", None)
-            if transcript.get("model") is None:
-                transcript["model"] = selected_model
+                        result = run_model_tool_loop(
+                            provider=provider,
+                            messages=messages,
+                            tools=openai_tools,
+                            model=None,
+                            max_tool_rounds=int(max_tool_rounds),
+                        )
+                        turn_record.update(result)
+                        assistant_text = result.get("assistant_text") or "Không có phản hồi từ Agent."
+                        tool_rounds = result.get("rounds", [])
 
-            st.write("⚙️ **Bước 2:** Gọi LLM Provider để đưa ra quyết định Tool Calling...")
-            result = run_model_tool_loop(
-                provider=provider,
-                messages=messages,
-                tools=openai_tools,
-                model=None,
-                max_tool_rounds=int(max_tool_rounds),
-            )
-            turn_record.update(result)
-            assistant_text = result.get("assistant_text") or "Không có phản hồi từ Agent."
+                        # Update history
+                        st.session_state.raw_history.append({"role": "user", "content": prompt_to_process})
+                        st.session_state.raw_history.append({"role": "assistant", "content": assistant_text})
 
-            tool_rounds = result.get("rounds", [])
-            total_calls = sum(len(r.get("tool_calls", [])) for r in tool_rounds)
-            if total_calls > 0:
-                called_tools_list = ", ".join([f"`{tc['name']}`" for r in tool_rounds for tc in r.get("tool_calls", [])])
-                st.write(f"🔧 **Bước 3:** Đã thực thi {total_calls} lượt gọi tool thật: {called_tools_list}")
-            else:
-                st.write("💬 **Bước 3:** Trả lời trực tiếp (không cần gọi công cụ bên ngoài).")
+                        # Check if waiting for user (clarify tool triggered)
+                        if result.get("status") == "waiting_for_user":
+                            clarify_event = next(
+                                (e for e in result.get("tool_events", []) if e.get("result", {}).get("awaiting_user")),
+                                None,
+                            )
+                            st.session_state.waiting_for_user = {
+                                "question": assistant_text,
+                                "response_type": (clarify_event.get("args", {}).get("response_type") if clarify_event else "text"),
+                                "options": (clarify_event.get("args", {}).get("options") if clarify_event else []),
+                            }
+                        else:
+                            st.session_state.waiting_for_user = None
 
-            st.write("📝 **Bước 4:** Tổng hợp thông tin hoàn tất!")
-            status.update(label="✅ Hoàn tất xử lý phản hồi!", state="complete", expanded=False)
+                        # Store in session messages
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": assistant_text,
+                            "rounds": tool_rounds,
+                        })
 
-            # Update history
-            st.session_state.raw_history.append({"role": "user", "content": prompt_to_process})
-            st.session_state.raw_history.append({"role": "assistant", "content": assistant_text})
+                    except Exception as exc:
+                        err_msg = f"{type(exc).__name__}: {str(exc)}"
+                        turn_record.update({
+                            "status": "provider_error",
+                            "error": err_msg,
+                        })
+                        assistant_text = f"❌ Lỗi Provider: {err_msg}"
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": assistant_text,
+                            "rounds": [],
+                        })
 
-            # Check if waiting for user (clarify tool triggered)
-            if result.get("status") == "waiting_for_user":
-                clarify_event = next(
-                    (e for e in result.get("tool_events", []) if e.get("result", {}).get("awaiting_user")),
-                    None,
-                )
-                st.session_state.waiting_for_user = {
-                    "question": assistant_text,
-                    "response_type": (clarify_event.get("args", {}).get("response_type") if clarify_event else "text"),
-                    "options": (clarify_event.get("args", {}).get("options") if clarify_event else []),
-                }
-            else:
-                st.session_state.waiting_for_user = None
+                    # Save transcript
+                    turn_record["ended_at"] = now_iso()
+                    transcript["turns"].append(turn_record)
+                    write_transcript(transcript_path, transcript)
 
-            # Store in session messages
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": assistant_text,
-                "rounds": tool_rounds,
-            })
+            # 5. Clean up: Disappear the running indicator and show ONLY the clean final answer
+            loading_placeholder.empty()
+            st.markdown(assistant_text)
 
-        except Exception as exc:
-            err_msg = f"{type(exc).__name__}: {str(exc)}"
-            turn_record.update({
-                "status": "provider_error",
-                "error": err_msg,
-            })
-            status.update(label="❌ Lỗi trong quá trình xử lý!", state="error", expanded=True)
-            st.error(f"Lỗi Provider: {err_msg}")
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": f"Lỗi xảy ra trong quá trình xử lý: {err_msg}",
-                "rounds": [],
-            })
-
-        # Save transcript
-        turn_record["ended_at"] = now_iso()
-        transcript["turns"].append(turn_record)
-        write_transcript(transcript_path, transcript)
-
-    # 4. Unlock state after completion and rerun
+    # 6. Unlock state and refresh smoothly
     st.session_state.is_running = False
+    st.rerun()
     st.rerun()
