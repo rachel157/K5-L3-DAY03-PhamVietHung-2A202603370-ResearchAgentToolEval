@@ -1,5 +1,12 @@
 ---
 name: github_search
+track: bonus
+kind: live_api
+provider: GitHub REST API
+requires_env: []
+inputs: [query, sort, limit]
+outputs: [query, count, items, error]
+side_effect: false
 description: Search for open-source repositories on GitHub by query string. Use this when the user asks for code repositories, libraries, or open-source projects.
 parameters:
   type: object

@@ -17,10 +17,58 @@ def test_github_search_success(mock_urlopen):
     assert res["count"] == 1
     assert res["items"][0]["name"] == "a/b"
 
-@patch("urllib.request.urlopen", side_error=Exception("Fail"))
+@patch("urllib.request.urlopen", side_effect=OSError("network unavailable"))
 def test_github_search_exception(mock_urlopen):
-    # mock exception handling
-    pass
+    result = github_search(query="agent")
+    assert "GitHub search failed" in result["error"]
+    mock_urlopen.assert_called_once()
+
+@patch("urllib.request.urlopen", side_effect=TimeoutError("timeout"))
+def test_hackernews_timeout_returns_error(mock_urlopen):
+    assert "HackerNews search failed" in hackernews(query="Rust")["error"]
+    mock_urlopen.assert_called_once()
+
+@patch("urllib.request.urlopen", side_effect=OSError("unavailable"))
+def test_wikipedia_network_error_returns_error(mock_urlopen):
+    assert "Wikipedia lookup failed" in wikipedia(title="Transformer")["error"]
+    mock_urlopen.assert_called_once()
+
+@patch("os.makedirs", side_effect=PermissionError("read only"))
+def test_save_note_permission_error_returns_error(mock_makedirs):
+    assert "Failed to save note" in save_note("note.md", "text", confirmed=True)["error"]
+
+@pytest.mark.parametrize("confirmed", [False, "false", "true", 1, None])
+@patch("builtins.open")
+def test_save_note_requires_boolean_confirmation(mock_open, confirmed):
+    result = save_note("note.md", "text", confirmed=confirmed)
+    assert result["awaiting_user"] is True
+    assert result["response_type"] == "yes_no"
+    assert result["question"]
+    mock_open.assert_not_called()
+
+def test_save_note_writes_markdown_under_notes_directory(tmp_path, monkeypatch):
+    import importlib
+    module = importlib.import_module("tools.save_note.tool")
+    monkeypatch.setattr(module, "NOTES_DIR", tmp_path / "notes")
+    result = save_note("../example", "# Research", confirmed=True)
+    assert result["success"] is True
+    assert result["filename"] == "example.md"
+    assert (tmp_path / "notes/example.md").read_text(encoding="utf-8") == "# Research"
+
+@pytest.mark.parametrize("filename", ["", "  ", ".", "..", "/"])
+def test_save_note_rejects_empty_or_directory_filename(filename):
+    assert "error" in save_note(filename, "text", confirmed=True)
+
+def test_save_note_rejects_non_text_content():
+    assert "error" in save_note("note.md", {"text": "bad"}, confirmed=True)
+
+@pytest.mark.parametrize("confirmed", [False, "false", "true", 1, None])
+def test_send_requires_boolean_confirmation(confirmed, fake_http):
+    from conftest import FakeResponse
+    from tools.send.tool import send_telegram
+    calls = fake_http(FakeResponse({"ok": True}))
+    assert send_telegram("draft", confirmed=confirmed)["status"] == "needs_confirmation"
+    assert calls == []
 
 def test_hackernews_empty_query():
     assert "error" in hackernews(query="   ")

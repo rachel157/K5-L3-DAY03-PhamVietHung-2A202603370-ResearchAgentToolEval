@@ -23,7 +23,7 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,t
 </head>
 <body>
 <header class="topbar">
-  <div class="brand">DAY 03 <span>· RESEARCH AGENT</span></div>
+  <div class="brand">D07 <span>· RESEARCH AGENT</span></div>
   <nav class="tabs" role="tablist" aria-label="Các phần của poster">
     <button id="tab-0" role="tab" aria-controls="slide-0" aria-selected="true" data-slide="0">Tổng quan</button>
     <button id="tab-1" role="tab" aria-controls="slide-1" aria-selected="false" data-slide="1">Lỗi đã sửa</button>
@@ -82,11 +82,11 @@ social_search(query="OpenAI",
     <div class="columns">
       <div class="card"><table><caption class="label">So sánh kết quả v1 và v2</caption><thead><tr><th scope="col">Chỉ số</th><th scope="col">v1</th><th scope="col">v2</th></tr></thead><tbody><tr><th scope="row">Case accuracy</th><td>95%</td><td>100%</td></tr><tr><th scope="row">Tool routing</th><td>95%</td><td>100%</td></tr><tr><th scope="row">Argument accuracy</th><td>95%</td><td>100%</td></tr><tr><th scope="row">Multi-turn</th><td>83,33% · 5/6</td><td>100% · 6/6</td></tr><tr><th scope="row">Provider error</th><td>0</td><td>0</td></tr></tbody></table></div>
       <div class="stack">
-        <div class="card highlight"><div class="label">Kiểm thử code hiện tại</div><div class="metric green">110 <small>test PASS</small></div><p>0 failed · 0 skipped. Kết quả pytest không đồng nghĩa mọi nhánh lỗi đều đã được kiểm tra đầy đủ.</p></div>
-        <div class="card"><div class="label">Phạm vi của kết quả</div><h3>Routing đúng; API cần được kiểm chứng riêng.</h3><p>Log v2 có 15 lượt tool lỗi do thiếu key Tavily, Firecrawl hoặc RapidAPI. Evaluator vẫn chấm tool calls/args, nên không suy ra tra cứu đã thành công.</p></div>
+        <div class="card highlight"><div class="label">Kiểm thử code hiện tại</div><div class="metric green">133 <small>test PASS</small></div><p>0 failed · 0 skipped. Bản v3 đạt base 20/20, group 10/10 và extension 8/10 về routing/args.</p></div>
+        <div class="card"><div class="label">Phạm vi của kết quả</div><h3>Routing đúng; thực thi cần đo riêng.</h3><p>Evaluator chấm tool calls/args. Lỗi dịch vụ vẫn được ghi trong log, nên điểm routing không đồng nghĩa mọi nguồn đã trả dữ liệu thành công.</p></div>
       </div>
     </div>
-    <p class="footnote">Nguồn: <a href="../runs/v1_B_base_openai_20261110T103950993649.json">Run v1</a> · <a href="../runs/v2_B_base_openai_20261110T112028833894.json">Run v2</a> · <a href="version_log.csv">Version log</a>. Kiểm tra code và log ngày 10/11/2026.</p>
+    <p class="footnote">Nguồn: <a href="../runs/v1_B_base_openai_20261110T103950993649.json">Run v1</a> · <a href="../runs/v2_B_base_openai_20261110T112028833894.json">Run v2</a> · <a href="../runs/v3_B_extension_openai_20261110T122531921754.json">Extension v3: 8/10</a> · <a href="version_log.csv">Version log</a>. Ngày 10/11/2026.</p>
   </section>
   <section id="slide-3" class="slide" role="tabpanel" aria-labelledby="tab-3" hidden>
     <header><div class="kicker">14 tool đã có code và schema</div><h2>Mỗi nguồn một công cụ phù hợp.</h2><p class="sub">4 tool mới mở rộng khả năng khám phá tài liệu, cộng đồng và mã nguồn.</p></header>

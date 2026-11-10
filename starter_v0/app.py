@@ -231,8 +231,14 @@ with st.sidebar:
         options=["v3", "v2", "v1", "v0"],
         index=0,
         disabled=st.session_state.is_running,
-        help="Phiên bản artifact prompt/tools đang thử nghiệm",
+        help="Nhãn cho file prompt/tools hiện tại; chọn nhãn cũ không khôi phục nội dung phiên bản cũ.",
     )
+
+    model_override = st.text_input(
+        "Model (để trống dùng mặc định provider)",
+        value="",
+        disabled=st.session_state.is_running,
+    ).strip() or None
 
     col1, col2 = st.columns(2)
     with col1:
@@ -298,6 +304,17 @@ with st.sidebar:
         )
 
 
+# Start a fresh conversation when its provider/model/artifacts change so the
+# transcript metadata always describes the calls recorded in that file.
+conversation_config = (provider_name, model_override, ver_info.get("artifact_version"), int(history_window), int(max_tool_rounds))
+if st.session_state.get("conversation_config") != conversation_config:
+    for state_key in ("messages", "raw_history"):
+        st.session_state[state_key] = []
+    for state_key in ("transcript", "transcript_path", "waiting_for_user", "quick_prompt"):
+        st.session_state[state_key] = None
+    st.session_state.turn_index = 0
+    st.session_state.conversation_config = conversation_config
+
 # ----------------- Transcript Initialization -----------------
 def get_or_create_transcript() -> tuple[dict[str, Any], Path]:
     if st.session_state.transcript is not None and st.session_state.transcript_path is not None:
@@ -311,7 +328,7 @@ def get_or_create_transcript() -> tuple[dict[str, Any], Path]:
         "transcript_id": transcript_id,
         **ver_info,
         "provider": provider_name,
-        "model": None,
+        "model": model_override,
         "system_prompt": str(system_prompt_file),
         "tools": str(tools_file),
         "history_window": int(history_window),
@@ -382,8 +399,18 @@ for msg in st.session_state.messages:
         col_agent, col_empty = st.columns([4, 1])
         with col_agent:
             with st.chat_message("assistant", avatar="🌿"):
-                # Clean final answer only
                 st.markdown(msg["content"])
+                tool_rounds = [r for r in msg.get("rounds", []) if r.get("tool_calls")]
+                if tool_rounds:
+                    with st.expander("Chi tiết công cụ: tham số và kết quả", expanded=False):
+                        for round_record in tool_rounds:
+                            st.markdown(f"**Vòng {round_record.get('round', 1)}**")
+                            for call in round_record.get("tool_calls", []):
+                                st.code(call.get("name", ""), language=None)
+                                st.json(call.get("args", {}))
+                            for event in round_record.get("tool_results", []):
+                                st.caption(f"Kết quả: {event.get('tool', '')}")
+                                st.json(event.get("result", {}))
 
 
 # ----------------- Interactive Clarification / Confirmation Buttons -----------------
@@ -478,7 +505,7 @@ if prompt_to_process:
                 with st.spinner("🌿 Đang suy luận và thực thi công cụ..."):
                     try:
                         provider = make_provider(provider_name)
-                        selected_model = getattr(provider, "default_model", None)
+                        selected_model = model_override or getattr(provider, "default_model", None)
                         if transcript.get("model") is None:
                             transcript["model"] = selected_model
 
@@ -486,7 +513,7 @@ if prompt_to_process:
                             provider=provider,
                             messages=messages,
                             tools=openai_tools,
-                            model=None,
+                            model=model_override,
                             max_tool_rounds=int(max_tool_rounds),
                         )
                         turn_record.update(result)
@@ -505,7 +532,7 @@ if prompt_to_process:
                             )
                             st.session_state.waiting_for_user = {
                                 "question": assistant_text,
-                                "response_type": (clarify_event.get("args", {}).get("response_type") if clarify_event else "text"),
+                                "response_type": ((clarify_event.get("result", {}).get("response_type") or clarify_event.get("args", {}).get("response_type") or "text") if clarify_event else "text"),
                                 "options": (clarify_event.get("args", {}).get("options") if clarify_event else []),
                             }
                         else:
@@ -542,5 +569,4 @@ if prompt_to_process:
 
     # 6. Unlock state and refresh smoothly
     st.session_state.is_running = False
-    st.rerun()
     st.rerun()

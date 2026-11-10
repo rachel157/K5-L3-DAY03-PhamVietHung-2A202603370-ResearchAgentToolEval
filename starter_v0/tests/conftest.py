@@ -7,6 +7,7 @@ Rules for this test suite:
 from __future__ import annotations
 
 import sys
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +57,7 @@ def block_network(monkeypatch: pytest.MonkeyPatch) -> None:
         raise RealNetworkCall(f"Real network call in a unit test: {args[:2]} - mock it with the fake_http fixture")
 
     monkeypatch.setattr(requests.Session, "request", _blocked)
+    monkeypatch.setattr(urllib.request, "urlopen", _blocked)
 
 
 @pytest.fixture
