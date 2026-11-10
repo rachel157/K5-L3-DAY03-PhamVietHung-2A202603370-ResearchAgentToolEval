@@ -18,7 +18,7 @@
 
 ---
 
-## 2. LUỒNG HOẠT ĐỘNG ĐƠN GIẢN CỦA RESEARCH AGENT & VÒNG LẶP ĐÁNH GIÁ
+## 2. LUỒNG HOẠT ĐỘNG ĐƠN GIẢN CỦA RESEARCH AGENT & VÒNG LẶT ĐÁNH GIÁ
 
 Research Agent không tự bịa câu trả lời mà hoạt động theo quy trình điều phối công cụ (**Function Calling / Tool Routing**) gồm 3 bước:
 
@@ -97,23 +97,100 @@ flowchart TD
 
 ---
 
-## 4. LỊCH TRÌNH PHỐI HỢP THEO 7 MỐC THỜI GIAN TRÊN LỚP
+## 4. WORKFLOW HOÀN CHỈNH: AI LÀM TRƯỚC — AI LÀM SAU & THỨ TỰ 11 LƯỢT PUSH
 
-Bảng dưới đây quy chiếu chính xác theo 7 mốc trên Slide tiến độ lớp học (áp dụng cho Ca sáng `09:00–13:00` và Ca chiều `14:00–18:00`, sau 15 phút đầu ổn định lớp):
+Để không ai phải ngồi chờ vô ích và cũng không ai giẫm chân lên nhau, công việc được chia thành **Luồng chạy song song (Phút 0–85)** và **Chuỗi chuyền tay tuần tự theo đúng 11 lượt Push Git**:
 
-| Mốc | Ca Sáng / Ca Chiều | Tên Mốc & Mục tiêu | Hoạt động phối hợp giữa 5 thành viên | Tiêu chí hoàn thành (Done) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Mốc 1**<br>*(20p)* | `09:15 – 09:35`<br>`14:15 – 14:35` | **Khởi động & Setup**<br>*(Chạy được API thật)* | • **TV2:** Tạo venv, cài requirements, điền `.env`, chạy `preflight_provider.py`<br>• **TV1, TV3, TV4, TV5:** Clone repo nhóm, nhận phân công | • Preflight openrouter PASS<br>• `pytest`: contract + example xanh |
-| **Mốc 2**<br>*(35p)* | `09:35 – 10:10`<br>`14:35 – 15:10` | **Baseline `v0` + Dựng UI**<br>*(Có điểm `v0` & biết lỗi)* | • **TV2:** Chạy eval `v0` trên `eval_base.json`, ghi dòng `v0` vào `version_log.csv`<br>• **TV1:** Cùng TV2 đọc file `runs/v0_*.json` để phân loại lỗi<br>• **TV5:** Code xong khung Streamlit `app.py`<br>• **TV3:** Code 2/4 tools mới<br>• **TV4:** Viết 6/12 unit tests | • Có file `runs/v0_*.json`<br>• `version_log.csv` có dòng `v0`<br>• UI mở được ở `localhost:8501` |
-| **Mốc 3**<br>*(30p)* | `10:10 – 10:40`<br>`15:10 – 15:40` | **Tối ưu `v1` + Tool mới**<br>*(Sửa 1 thứ, đo lại)* | • **TV2:** Sửa `system_prompt.md` (xoá chỉ dẫn xấu + thêm luật `clarify`/`send`/`no_tool`), chạy eval `v1`, ghi `version_log.csv`<br>• **TV3:** Hoàn thành đủ 4 tools mới + `TOOL.md` + `new_tools_schema.yaml`<br>• **TV1:** Soạn xong 5 câu single-turn trong `eval_group.json` | • `version_log.csv` có dòng `v1`<br>• 4 Tools mới hoàn thiện code & `TOOL.md` |
-| **Mốc 4**<br>*(30p)* | `10:40 – 11:10`<br>`15:40 – 16:10` | **Team Eval + `v2` + Unit Test**<br>*(Tự đo lỗi nhóm quan tâm)* | • **TV2 + TV3:** Ghép 4 tools mới vào `tools/__init__.py` và `tools.yaml`, chạy `v2` trên base & group<br>• **TV1:** Hoàn thành đủ 10 cases trong `eval_group.json` (5 single + 5 multi)<br>• **TV3 + TV4:** Chạy `pytest` cho cả `test_tools_todo.py` và `test_new_tools.py` | • `eval_group.json` có ≥ 10 cases<br>• `version_log.csv` có `v2`<br>• `pytest`: `0 failed, 0 skipped` |
-| **Mốc 5**<br>*(25p)*<br>**DEADLINE** | `11:10 – 11:35`<br>`16:10 – 16:35` | **REPORT Phần A + Mở Link Demo**<br>*(Xong trước Showdown)* | • **TV5:** Chạy `streamlit run app.py` + `cloudflared tunnel`, gửi URL public cho TV1<br>• **TV1:** Hoàn tất `REPORT.md` Phần A (A1, A2, A3 + URL) và `artifacts/poster.html` | • REPORT Phần A đủ A1–A3<br>• Link `trycloudflare.com` mở được từ máy khác |
-| **Mốc 6**<br>*(55p)* | `11:35 – 12:30`<br>`16:35 – 17:30` | **Team Showdown**<br>*(Demo & Thử chéo)* | • **Cả nhóm:** Demo sản phẩm bằng Poster & Web UI<br>• **TV1 + TV2:** Ghi chép lại các câu hỏi của nhóm khác làm agent sai để đưa vào cải tiến `v3`<br>• **TV5:** Giữ terminal streamlit và cloudflared chạy xuyên suốt | • Đã demo thành công<br>• Có danh sách lỗi thực tế để tối ưu `v3` |
-| **Mốc 7**<br>*(30p)* | `12:30 – 13:00`<br>`17:30 – 18:00`<br>*(Nộp trước 23:59)* | **Chốt `v3` + REPORT Phần B + Nộp LMS** | • **TV2:** Tinh chỉnh bản `v3` cuối cùng, chạy eval `v3` trên base, group, extension<br>• **TV1:** Chạy `chat.py` ≥ 3 lượt live lấy transcript, hoàn thiện toàn bộ Phần B (B1–B6) và tạo `TEAM.md`<br>• **Cả 5 thành viên:** Đồng bộ code về repo cá nhân (xoá `.env`) và nộp link lên LMS | • Đủ `v0–v3` trong `version_log`<br>• Có `transcripts/*.transcript.json`<br>• Đã nộp LMS & Quét QR điểm danh cuối buổi |
+```mermaid
+flowchart TD
+    subgraph G1["GIAI ĐOẠN 1 (Phút 0 -> 55): KHỞI ĐỘNG SONG SONG + CHẠY v0, v1"]
+        P1["[Push #1 - TV2 làm trước tiên] Điền .env, chạy v0 -> Push runs/v0_*.json + version_log.csv"]
+        P2["[Push #2 - TV2 làm tiếp] Sửa system_prompt.md, chạy v1 -> Push system_prompt.md + runs/v1_*.json"]
+        S3["[TV3 làm song song ở Local] Code 4 tools mới + chốt tên 4 tools báo cho TV1"]
+        S4["[TV4 làm song song ở Local] Viết 12 unit tests trong test_tools_todo.py + sửa bug biên"]
+        S5["[TV5 làm song song ở Local] Code giao diện starter_v0/app.py"]
+        S1["[TV1 làm song song ở Local] Tạo TEAM.md + viết 10 câu eval_group.json (nhận tên tool từ TV3)"]
+        P1 --> P2
+        S3 -. "Báo tên 4 tools mới" .-> S1
+    end
+
+    subgraph G2["GIAI ĐOẠN 2 (Phút 55 -> 115): NỐI ĐUÔI PUSH CODE & GHÉP BẢN v2"]
+        P3["[Push #3 - TV4 push trước] Push test_tools_todo.py + bản vá bug biên tool gốc"]
+        P4["[Push #4 - TV3 push thứ 2] Pull về -> Push 4 tools mới + tools/__init__.py + new_tools_schema.yaml + test_new_tools.py"]
+        P5["[Push #5 - TV1 push thứ 3] Pull về -> Push TEAM.md + data/eval_group.json (đủ 10 câu)"]
+        P6["[Push #6 - TV2 chốt v2] Pull tất cả về -> Ghép new_tools_schema.yaml vào cuối tools.yaml -> Chạy pytest (0 failed, 0 skipped) -> Chạy eval v2 (base & group) -> Push"]
+        P2 --> P3 --> P4 --> P5 --> P6
+        S4 --> P3
+        S3 --> P4
+        S1 --> P5
+    end
+
+    subgraph G3["GIAI ĐOẠN 3 (Phút 115 -> 140): MỞ TUNNEL TRƯỚC -> CHỐT REPORT PHẦN A SAU"]
+        P7["[Push #7 - TV5 làm trước] Pull bản v2 của TV2 về -> Push app.py -> Bật Streamlit + Cloudflare Tunnel -> Gửi link trycloudflare.com cho TV1"]
+        P8["[Push #8 - TV1 làm ngay sau TV5] Nhận link Tunnel + bảng tools từ TV2/TV3 -> Điền xong REPORT.md Phần A & poster.html -> Push trước giờ Showdown"]
+        P6 --> P7 --> P8
+        S5 --> P7
+    end
+
+    subgraph G4["GIAI ĐOẠN 4 (Phút 140 -> 225): SHOWDOWN -> CHẠY v3 -> TRANSCRIPT -> KHÓA SỔ LMS"]
+        SD["[Phút 140 -> 195: TEAM SHOWDOWN] Cả nhóm Demo & Test chéo, TV1 + TV2 ghi lại các câu bị lỗi"]
+        P9["[Push #9 - TV2 làm trước sau Showdown] Sửa prompt/schema -> Chạy eval v3 (base, group, extension) -> Push runs/v3_*.json + version_log.csv"]
+        P10["[Push #10 - TV5/TV1 làm tiếp theo] Pull bản v3 -> Chạy chat.py live >= 3 lượt -> Push transcripts/*.transcript.json"]
+        P11["[Push #11 - TV1 khóa sổ cuối cùng] Pull toàn bộ số liệu v0..v3, pytest, transcript -> Hoàn thiện REPORT.md Phần B -> Push Final"]
+        LMS["[Tất cả 5 thành viên] Pull bản Final #11 -> Đẩy sang Repo cá nhân của từng người -> Nộp link LMS"]
+        P8 --> SD --> P9 --> P10 --> P11 --> LMS
+    end
+```
+
+### Chi tiết từng bước "Ai làm trước — Ai làm sau" (11 Lượt Chuyền Tay):
+
+1. **Bước 1 (Phút 0–20) — TV2 làm người mở đường (`Push #1`):**
+   - **Ai làm trước:** **TV2** thiết lập `.env`, kiểm tra `preflight_provider.py`, chạy điểm chuẩn `v0` và thực hiện **`Push #1`** (`runs/v0_*.json`, `version_log.csv`).
+   - **Trong lúc chờ TV2 chạy `v0`:** **TV1, TV3, TV4, TV5** không ngồi chơi mà bắt tay làm ngay trên file riêng ở máy local:
+     - **TV3** chốt ngay tên 4 tools mới (`github_search`, `hackernews`, `wikipedia`, `save_note`) và nhắn cho **TV1** biết trước.
+     - **TV1** tạo `TEAM.md` và viết trước 8 câu đầu trong `data/eval_group.json`.
+     - **TV4** mở `tests/test_tools_todo.py` viết 12 hàm unit test.
+     - **TV5** viết giao diện `starter_v0/app.py`.
+2. **Bước 2 (Phút 20–55) — TV2 tối ưu `v1` (`Push #2`) & TV1 nhận kết quả `v0`:**
+   - **Ai làm:** **TV2** dựa trên lỗi của `v0` để sửa `artifacts/system_prompt.md`, chạy `v1`, và thực hiện **`Push #2`**.
+   - **Ai nhận bàn giao:** **TV1** lấy kết quả `v0`, `v1` của TV2 và tên 4 tools mới của TV3 để hoàn thiện đủ 10 câu trong `data/eval_group.json`.
+3. **Bước 3 (Phút 55–85) — TV4 -> TV3 -> TV1 lần lượt Push sản phẩm độc lập (`Push #3, #4, #5`):**
+   - **Thứ tự Push nối đuôi nhau:**
+     - **`Push #3` (TV4 làm trước):** Chạy `pytest tests/test_tools_todo.py` xanh -> Push `test_tools_todo.py` và các bản vá lỗi biên trong tool gốc.
+     - **`Push #4` (TV3 làm ngay sau TV4):** Pull về -> Đăng ký 4 tools mới vào `tools/__init__.py` -> Push 4 thư mục tool mới + `tools/new_tools_schema.yaml` + `tools/__init__.py` + `tests/test_new_tools.py`.
+     - **`Push #5` (TV1 làm ngay sau TV3):** Pull về -> Push `TEAM.md` + `data/eval_group.json` (10 cases).
+4. **Bước 4 (Phút 85–115) — TV2 gom tất cả để ghép `tools.yaml` và chạy `v2` (`Push #6`):**
+   - **Điều kiện cần trước khi làm:** Phải đợi **TV4 (`Push #3`)**, **TV3 (`Push #4`)** và **TV1 (`Push #5`)** đã push xong.
+   - **Ai làm:** **TV2** `git pull` về -> Copy nội dung `tools/new_tools_schema.yaml` của TV3 dán vào cuối `artifacts/tools.yaml` + tối ưu mô tả 10 tools gốc -> Chạy `pytest -v` (đảm bảo `0 failed, 0 skipped`) -> Chạy `run_eval.py --version v2` trên cả `base` và `group` -> Thực hiện **`Push #6`**.
+5. **Bước 5 (Phút 115–140 - Hạn cứng trước Showdown) — TV5 mở Link Demo TRƯỚC (`Push #7`) -> TV1 chốt `REPORT.md` Phần A SAU (`Push #8`):**
+   - **Ai làm trước (`Push #7`):** **TV5** `git pull` bản `v2` của TV2 về -> Push file `starter_v0/app.py` -> Bật `streamlit run app.py` và `cloudflared tunnel --url http://localhost:8501` -> Copy link `https://xxxx.trycloudflare.com` gửi cho **TV1**.
+   - **Ai làm sau (`Push #8`):** **TV1** nhận link `trycloudflare.com` từ TV5 -> Dán vào `artifacts/REPORT.md` (Phần A1, A2, A3) và `artifacts/poster.html` -> Thực hiện **`Push #8`** trước giờ Showdown (`11:35` ca sáng / `16:35` ca chiều).
+6. **Bước 6 (Phút 140–195) — Cả nhóm thi đấu Team Showdown:**
+   - **TV5** giữ máy chạy Streamlit + Tunnel xuyên suốt.
+   - **TV1 & TV2** trình bày Demo và ghi chép lại các câu hỏi của nhóm đối thủ khiến chatbot trả lời chưa chuẩn để cải tiến lên `v3`.
+7. **Bước 7 (Phút 195–225) — TV2 chạy `v3` (`Push #9`) -> TV5 lấy Transcript (`Push #10`) -> TV1 khóa sổ `REPORT.md` Phần B (`Push #11`):**
+   - **Ai làm thứ nhất (`Push #9`):** **TV2** sửa tinh chỉnh cuối cùng trong `system_prompt.md` / `tools.yaml`, chạy `run_eval.py --version v3` cho cả 3 bộ (`base`, `group`, `extension`), ghi `version_log.csv` và thực hiện **`Push #9`**.
+   - **Ai làm thứ hai (`Push #10`):** **TV5** (hoặc TV1) `git pull` bản `v3` về, chạy `python chat.py --provider openrouter --version v3` chat thực tế ≥ 3 lượt (có gọi tool + xác nhận `send`) để sinh file `transcripts/*.transcript.json`, thực hiện **`Push #10`**.
+   - **Ai làm cuối cùng (`Push #11`):** **TV1** `git pull` toàn bộ kết quả từ `Push #9` và `Push #10`, điền hoàn chỉnh **Phần B (B1–B6)** trong `artifacts/REPORT.md`, thực hiện **`Push #11 (Final Release)`**.
+   - **Kết thúc:** Cả 5 thành viên `git pull` bản `Push #11` về, đẩy sang repo cá nhân của từng người (`K5-L3-DAY03-HoVaTen-MSSV-ResearchAgentToolEval`) và bấm nộp trên LMS!
 
 ---
 
-## 5. BỘ QUY TẮC CHỐNG XUNG ĐỘT CODE TUYỆT ĐỐI (ZERO MERGE CONFLICT RULES)
+## 5. BẢNG LỊCH TRÌNH THEO 7 MỐC THỜI GIAN TRÊN LỚP
+
+| Mốc | Ca Sáng / Ca Chiều | Tên Mốc & Mục tiêu | Thứ tự phối hợp giữa 5 thành viên | Tiêu chí hoàn thành (Done) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Mốc 1**<br>*(20p)* | `09:15 – 09:35`<br>`14:15 – 14:35` | **Khởi động & Setup**<br>*(Chạy được API thật)* | • **TV2 làm trước:** Tạo venv, cài requirements, điền `.env`, chạy `preflight_provider.py`<br>• **TV3:** Chốt tên 4 tools mới báo cho TV1<br>• **TV1, TV4, TV5:** Clone repo nhóm, bắt đầu làm trên file riêng ở local | • Preflight openrouter PASS<br>• `pytest`: contract + example xanh |
+| **Mốc 2**<br>*(35p)* | `09:35 – 10:10`<br>`14:35 – 15:10` | **Baseline `v0` + Dựng UI**<br>*(Có điểm `v0` & biết lỗi)* | • **TV2 (`Push #1`):** Chạy eval `v0` trên `eval_base.json`, push `runs/v0_*.json` + `version_log.csv`<br>• **TV1:** Đọc `runs/v0_*.json` để phân loại lỗi + viết 8/10 câu `eval_group.json`<br>• **TV5:** Code xong khung Streamlit `app.py`<br>• **TV3:** Code 2/4 tools mới · **TV4:** Viết 6/12 unit tests | • Có file `runs/v0_*.json`<br>• `version_log.csv` có dòng `v0`<br>• UI mở được ở `localhost:8501` |
+| **Mốc 3**<br>*(30p)* | `10:10 – 10:40`<br>`15:10 – 15:40` | **Tối ưu `v1` + Tool mới**<br>*(Sửa 1 thứ, đo lại)* | • **TV2 (`Push #2`):** Sửa `system_prompt.md`, chạy eval `v1`, push `version_log.csv`<br>• **TV4 (`Push #3`):** Hoàn thành 12 unit tests trong `test_tools_todo.py` & push<br>• **TV3 (`Push #4`):** Hoàn thành 4 tools mới + `new_tools_schema.yaml` + `test_new_tools.py` & push<br>• **TV1 (`Push #5`):** Hoàn thành 10 câu `eval_group.json` + `TEAM.md` & push | • `version_log.csv` có dòng `v1`<br>• Đã push đủ `Push #2, #3, #4, #5` |
+| **Mốc 4**<br>*(30p)* | `10:40 – 11:10`<br>`15:40 – 16:10` | **Team Eval + `v2` + Unit Test**<br>*(Tự đo lỗi nhóm quan tâm)* | • **TV2 (`Push #6`):** Pull code từ TV4, TV3, TV1 -> Ghép `new_tools_schema.yaml` vào cuối `tools.yaml` -> Kiểm tra `pytest` xanh 100% -> Chạy eval `v2` trên `base` & `group` -> Push | • `eval_group.json` có ≥ 10 cases<br>• `version_log.csv` có `v2`<br>• `pytest`: `0 failed, 0 skipped` |
+| **Mốc 5**<br>*(25p)*<br>**DEADLINE** | `11:10 – 11:35`<br>`16:10 – 16:35` | **REPORT Phần A + Mở Link Demo**<br>*(Xong trước Showdown)* | • **TV5 làm trước (`Push #7`):** Pull bản `v2` -> Push `app.py` -> Chạy `streamlit run app.py` + `cloudflared tunnel`, gửi URL public cho TV1<br>• **TV1 làm ngay sau (`Push #8`):** Dán URL vào `REPORT.md` Phần A (A1–A3) và `poster.html` -> Push | • REPORT Phần A đủ A1–A3<br>• Link `trycloudflare.com` mở được từ máy khác |
+| **Mốc 6**<br>*(55p)* | `11:35 – 12:30`<br>`16:35 – 17:30` | **Team Showdown**<br>*(Demo & Thử chéo)* | • **Cả nhóm:** Demo sản phẩm bằng Poster & Web UI<br>• **TV1 + TV2:** Ghi chép lại các câu hỏi của nhóm khác làm agent sai để đưa vào cải tiến `v3`<br>• **TV5:** Giữ terminal streamlit và cloudflared chạy xuyên suốt | • Đã demo thành công<br>• Có danh sách lỗi thực tế để tối ưu `v3` |
+| **Mốc 7**<br>*(30p)* | `12:30 – 13:00`<br>`17:30 – 18:00`<br>*(Nộp trước 23:59)* | **Chốt `v3` + REPORT Phần B + Nộp LMS** | • **TV2 làm trước (`Push #9`):** Chạy eval `v3` trên `base`, `group`, `extension` & push<br>• **TV5 làm tiếp (`Push #10`):** Chạy `chat.py` ≥ 3 lượt live & push `transcripts/*.transcript.json`<br>• **TV1 làm cuối (`Push #11`):** Hoàn thiện `REPORT.md` Phần B (B1–B6) & push Final<br>• **Cả 5 thành viên:** Đồng bộ về repo cá nhân (xoá `.env`) và nộp link lên LMS | • Đủ `v0–v3` trong `version_log`<br>• Có `transcripts/*.transcript.json`<br>• Đã nộp LMS & Quét QR điểm danh cuối buổi |
+
+---
+
+## 6. BỘ QUY TẮC CHỐNG XUNG ĐỘT CODE TUYỆT ĐỐI (ZERO MERGE CONFLICT RULES)
 
 Để 5 người cùng làm việc trong 3.5 giờ mà **không xảy ra bất kỳ xung đột Git (Merge Conflict) hay làm hỏng bài chấm tự động nào**, cả nhóm bắt buộc tuân thủ **6 Quy tắc Vàng** sau:
 
@@ -129,7 +206,7 @@ Không ai được sửa vào file thuộc quyền sở hữu của người kh�
 1. **Cách ly `artifacts/tools.yaml` (Giữa TV2 và TV3):**
    - **TV3 KHÔNG sửa trực tiếp vào `artifacts/tools.yaml`** khi đang viết 4 tools mới (vì lúc đó TV2 đang sửa `tools.yaml` cho bản `v1`/`v2`).
    - Thay vào đó, TV3 viết phần khai báo YAML của 4 tools mới vào file trung gian `starter_v0/tools/new_tools_schema.yaml`.
-   - Đúng **đầu Mốc 4 (`10:40` / `15:40`)**, **TV2** (chủ sở hữu `tools.yaml`) sẽ copy nội dung từ `new_tools_schema.yaml` dán nối tiếp vào **cuối file** `artifacts/tools.yaml`.
+   - Đúng **đầu Mốc 4 (`Push #6`)**, **TV2** (chủ sở hữu `tools.yaml`) sẽ copy nội dung từ `new_tools_schema.yaml` dán nối tiếp vào **cuối file** `artifacts/tools.yaml`.
 2. **Cách ly file Unit Test (Giữa TV3 và TV4):**
    - **TV4** làm việc độc quyền trên `starter_v0/tests/test_tools_todo.py` (12 test stubs cho các tool gốc).
    - **TV3** tạo một file hoàn toàn mới tên là `starter_v0/tests/test_new_tools.py` để viết 12 unit tests cho 4 tools mới.
@@ -137,8 +214,8 @@ Không ai được sửa vào file thuộc quyền sở hữu của người kh�
 
 ### Quy tắc 3 — Chốt chặn đồng bộ `test_tool_contract.py` ở đầu Mốc 4
 File `tests/test_tool_contract.py` kiểm tra `set(TOOL_FUNCTIONS.keys()) == set(tools.yaml names)`. Do đó:
-- Trước Mốc 4 (trong lúc TV2 đang chạy `v0` và `v1`), **TV3 chưa push thay đổi trong `tools/__init__.py` lên `main`** (chỉ giữ ở máy local hoặc nhánh `feat/new-tools`).
-- Đúng đầu **Mốc 4**, khi TV3 đã viết xong cả 4 tools mới, TV2 và TV3 ghép đồng thời `tools/__init__.py` + `artifacts/tools.yaml` trong **cùng 1 lần commit** và chạy kiểm tra ngay:
+- Trước khi TV2 chạy `v1` xong (`Push #2`), **TV3 chưa push thay đổi trong `tools/__init__.py` lên `main`**.
+- Sau khi TV3 thực hiện `Push #4`, TV2 pull về và ghép ngay `new_tools_schema.yaml` vào `artifacts/tools.yaml` rồi chạy kiểm tra:
   ```bash
   cd starter_v0
   pytest tests/test_tool_contract.py -v
@@ -167,8 +244,8 @@ git add starter_v0/tests/test_tools_todo.py starter_v0/tools/
 # • Nếu là TV5 (Streamlit UI):
 git add starter_v0/app.py starter_v0/transcripts/
 
-# Bước 2: Commit kèm tên vai trò
-git commit -m "feat(tvX): mo ta ngan gon phan viec"
+# Bước 2: Commit kèm số thứ tự Push và vai trò
+git commit -m "feat(push-X-tvY): mo ta ngan gon phan viec"
 
 # Bước 3: Luôn pull --rebase trước khi push để không tạo merge commit lỗi
 git pull --rebase origin main
@@ -199,7 +276,7 @@ cloudflared tunnel --url http://localhost:8501
 
 ---
 
-## 6. CHECKLIST KIỂM TRA TRƯỚC KHI MỖI THÀNH VIÊN NỘP LÊN LMS
+## 7. CHECKLIST KIỂM TRA TRƯỚC KHI MỖI THÀNH VIÊN NỘP LÊN LMS
 
 - [ ] **1.** Tên repository cá nhân đúng chuẩn: `K5-L3-DAY03-HoVaTen-MSSV-ResearchAgentToolEval` (và có file `TEAM.md` liệt kê đủ 5 thành viên).
 - [ ] **2.** **KHÔNG có file `.env`** hoặc bất kỳ API key / Telegram Bot Token nào bị lộ trong code hay báo cáo (`git status --ignored`).
