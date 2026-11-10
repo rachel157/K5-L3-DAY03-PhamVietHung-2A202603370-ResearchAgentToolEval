@@ -394,10 +394,10 @@ if st.session_state.waiting_for_user and not st.session_state.is_running:
     resp_type = wait_info.get("response_type", "text")
     options = wait_info.get("options", [])
 
-    if resp_type == "yes_no" or not options:
+    if resp_type == "yes_no":
         c1, c2 = st.columns([1, 1])
         with c1:
-            if st.button("✅ Đồng ý / Xác nhận gửi", key="btn_confirm_yes", type="primary", use_container_width=True):
+            if st.button("✅ Đồng ý / Xác nhận", key="btn_confirm_yes", type="primary", use_container_width=True):
                 st.session_state.quick_prompt = "Tôi xác nhận đồng ý."
                 st.session_state.waiting_for_user = None
                 st.rerun()
@@ -406,7 +406,7 @@ if st.session_state.waiting_for_user and not st.session_state.is_running:
                 st.session_state.quick_prompt = "Không, tôi không đồng ý."
                 st.session_state.waiting_for_user = None
                 st.rerun()
-    elif options:
+    elif resp_type == "choice" and options:
         opt_cols = st.columns(len(options))
         for idx, opt in enumerate(options):
             with opt_cols[idx]:
@@ -414,11 +414,19 @@ if st.session_state.waiting_for_user and not st.session_state.is_running:
                     st.session_state.quick_prompt = opt
                     st.session_state.waiting_for_user = None
                     st.rerun()
+    else:
+        st.caption("💬 *Vui lòng nhập câu trả lời hoặc thông tin bổ sung vào ô chat bên dưới và nhấn Enter.*")
 
 
 # ----------------- Handle User Input with Lock & Loading Effect -----------------
+chat_placeholder = "Nhập yêu cầu nghiên cứu hoặc câu hỏi..."
+if st.session_state.is_running:
+    chat_placeholder = "⏳ Agent đang xử lý yêu cầu, vui lòng chờ..."
+elif st.session_state.waiting_for_user:
+    chat_placeholder = "✍️ Nhập thông tin bổ sung cho Agent..."
+
 user_input = st.chat_input(
-    "Nhập yêu cầu nghiên cứu hoặc câu hỏi..." if not st.session_state.is_running else "⏳ Agent đang xử lý yêu cầu, vui lòng chờ...",
+    chat_placeholder,
     disabled=st.session_state.is_running,
 )
 
@@ -430,8 +438,9 @@ elif user_input and not st.session_state.is_running:
     prompt_to_process = user_input.strip()
 
 if prompt_to_process:
-    # 1. Lock state immediately to prevent spamming
+    # 1. Lock state immediately to prevent spamming & clear waiting state
     st.session_state.is_running = True
+    st.session_state.waiting_for_user = None
 
     # 2. Render User Message IMMEDIATELY on the right before agent starts
     col_empty, col_user = st.columns([1, 4])
