@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -34,106 +35,201 @@ TRANSCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ----------------- Streamlit Page Configuration -----------------
 st.set_page_config(
-    page_title="Research Agent - Day 03 Lab v2",
+    page_title="Research Agent Workspace - Day 03 Lab v2",
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ----------------- Custom Light Green (Xanh Lá Nhạt) CSS Styling -----------------
+# ----------------- Modern Light Green (Xanh Lá Nhạt) Design System -----------------
 st.markdown("""
 <style>
-    /* Global background & fonts */
+    /* Global Background & Font */
     .stApp {
-        background-color: #F8FAF8;
+        background-color: #F8FAF9;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    
-    /* Header styling with fresh light green */
-    .main-header {
-        font-size: 2.3rem;
-        font-weight: 750;
-        margin-bottom: 0.2rem;
+
+    /* Top Hero Header Card */
+    .hero-banner {
+        background: linear-gradient(135deg, #ECFDF5 0%, #E6F4EA 50%, #D1FAE5 100%);
+        border: 1px solid #A7F3D0;
+        border-radius: 16px;
+        padding: 1.4rem 1.8rem;
+        margin-bottom: 1.2rem;
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.08);
+    }
+    .hero-title {
+        font-size: 2.1rem;
+        font-weight: 800;
         color: #065F46;
+        margin: 0;
         display: flex;
         align-items: center;
         gap: 0.6rem;
     }
-    .sub-header {
-        font-size: 1.05rem;
+    .hero-subtitle {
+        font-size: 1rem;
         color: #047857;
-        margin-bottom: 1.2rem;
-        background: #ECFDF5;
-        padding: 0.5rem 0.9rem;
-        border-radius: 8px;
-        border-left: 4px solid #10B981;
+        margin-top: 0.4rem;
+        margin-bottom: 0.8rem;
     }
-    
-    /* Badges & Chips */
+
+    /* Status Badges */
     .badge-chip {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
         padding: 0.25rem 0.75rem;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         font-weight: 600;
         border-radius: 9999px;
-        margin-right: 0.5rem;
-        background-color: #D1FAE5;
+        background-color: #FFFFFF;
         color: #065F46;
-        border: 1px solid #A7F3D0;
-    }
-    .badge-tool {
-        background-color: #ECFDF5;
-        color: #047857;
         border: 1px solid #6EE7B7;
-    }
-    .badge-provider {
-        background-color: #E6F4EA;
-        color: #137333;
-        border: 1px solid #CEEAD6;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        margin-right: 0.5rem;
     }
 
-    /* Tool Call Card / Expander Highlight */
-    .tool-box {
-        border-left: 4px solid #10B981;
-        padding: 0.6rem 0.9rem;
-        margin: 0.5rem 0;
-        background: #F0FDF4;
-        border-radius: 0 8px 8px 0;
-        border: 1px solid #D1FAE5;
-        border-left-width: 4px;
+    /* Chat Messages Layout: Left vs Right Separation */
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        margin: 1rem 0 2rem 0;
     }
-    
-    /* Quick Prompt Buttons customization */
-    div.stButton > button {
-        border-radius: 8px;
-        border: 1px solid #A7F3D0;
+
+    /* User Message Bubble: Aligned Right */
+    .user-bubble-wrapper {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        margin-bottom: 0.8rem;
+    }
+    .user-bubble {
+        max-width: 75%;
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        color: #FFFFFF !important;
+        padding: 0.9rem 1.2rem;
+        border-radius: 20px 20px 4px 20px;
+        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.2);
+        font-size: 1rem;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+    .user-bubble * {
+        color: #FFFFFF !important;
+    }
+    .user-meta {
+        font-size: 0.75rem;
+        color: #D1FAE5;
+        margin-bottom: 0.25rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        justify-content: flex-end;
+    }
+
+    /* Assistant Message Bubble: Aligned Left */
+    .agent-bubble-wrapper {
+        display: flex;
+        justify-content: flex-start;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    .agent-bubble {
+        max-width: 85%;
+        background-color: #FFFFFF;
+        color: #1F2937;
+        padding: 1.1rem 1.4rem;
+        border-radius: 20px 20px 20px 4px;
+        border: 1px solid #D1FAE5;
+        border-left: 5px solid #10B981;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+        font-size: 1rem;
+        line-height: 1.6;
+        word-break: break-word;
+    }
+    .agent-meta {
+        font-size: 0.78rem;
+        color: #059669;
+        margin-bottom: 0.4rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    /* Tool Call Execution Card */
+    .tool-exec-card {
         background-color: #F0FDF4;
+        border: 1px solid #A7F3D0;
+        border-left: 4px solid #059669;
+        border-radius: 8px;
+        padding: 0.7rem 0.9rem;
+        margin: 0.6rem 0;
+    }
+    .tool-badge-pill {
+        background: #DCFCE7;
+        color: #065F46;
+        font-weight: 700;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        border: 1px solid #86EFAC;
+    }
+
+    /* Quick Prompt Cards */
+    div.stButton > button {
+        border-radius: 10px;
+        border: 1px solid #A7F3D0;
+        background-color: #FFFFFF;
         color: #065F46;
         font-weight: 600;
-        transition: all 0.2s ease-in-out;
+        padding: 0.5rem 0.8rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    div.stButton > button:hover {
-        background-color: #D1FAE5;
+    div.stButton > button:hover:not(:disabled) {
+        background-color: #ECFDF5;
         border-color: #34D399;
-        color: #064E3B;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15);
+        color: #047857;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);
     }
-    
-    /* Primary buttons (Confirm) */
+    div.stButton > button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Primary Action Buttons */
     div.stButton > button[kind="primary"] {
-        background-color: #10B981;
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
         color: #FFFFFF;
-        border: 1px solid #059669;
+        border: none;
+        box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
     }
-    div.stButton > button[kind="primary"]:hover {
-        background-color: #059669;
+    div.stButton > button[kind="primary"]:hover:not(:disabled) {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
         color: #FFFFFF;
     }
 
-    /* Sidebar background tint */
+    /* Sidebar Styling */
     [data-testid="stSidebar"] {
-        background-color: #F0FDF4;
-        border-right: 1px solid #E5E7EB;
+        background-color: #F2FBF6;
+        border-right: 1px solid #E2E8F0;
+    }
+
+    /* Pulsing Running Glow */
+    @keyframes pulseGlow {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .running-pulse {
+        animation: pulseGlow 1.5s infinite;
+        border-radius: 12px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -155,19 +251,22 @@ def init_session_state() -> None:
         st.session_state.quick_prompt = None
     if "waiting_for_user" not in st.session_state:
         st.session_state.waiting_for_user = None
+    if "is_running" not in st.session_state:
+        st.session_state.is_running = False
 
 init_session_state()
 
 
 # ----------------- Sidebar Configuration -----------------
 with st.sidebar:
-    st.markdown("### 🌿 Cấu hình Agent")
+    st.markdown("### 🌿 Cấu hình Research Agent")
 
     default_provider_idx = 0 if os.getenv("OPENAI_API_KEY") else 1
     provider_name = st.selectbox(
         "Model Provider",
         options=["openai", "openrouter", "gemini", "anthropic", "ollama"],
         index=default_provider_idx,
+        disabled=st.session_state.is_running,
         help="Chọn LLM provider được hỗ trợ trong thư mục providers/",
     )
 
@@ -175,14 +274,15 @@ with st.sidebar:
         "Artifact Version",
         options=["v3", "v2", "v1", "v0"],
         index=0,
+        disabled=st.session_state.is_running,
         help="Phiên bản artifact prompt/tools đang thử nghiệm",
     )
 
     col1, col2 = st.columns(2)
     with col1:
-        max_tool_rounds = st.number_input("Max Tool Rounds", min_value=1, max_value=8, value=4)
+        max_tool_rounds = st.number_input("Max Tool Rounds", min_value=1, max_value=8, value=4, disabled=st.session_state.is_running)
     with col2:
-        history_window = st.number_input("History Window", min_value=1, max_value=10, value=5)
+        history_window = st.number_input("History Window", min_value=1, max_value=10, value=5, disabled=st.session_state.is_running)
 
     system_prompt_file = ARTIFACTS_DIR / "system_prompt.md"
     tools_file = ARTIFACTS_DIR / "tools.yaml"
@@ -203,10 +303,10 @@ with st.sidebar:
         }
 
     st.markdown("---")
-    st.markdown("#### 🏷️ Version & Hash Info")
+    st.markdown("#### 🏷️ Metadata & Hashes")
     st.caption(f"**Artifact Version:** `{ver_info.get('artifact_version')}`")
-    st.caption(f"**Prompt Hash:** `{ver_info.get('prompt_hash', '')[:10]}`")
-    st.caption(f"**Tools Hash:** `{ver_info.get('tools_hash', '')[:10]}`")
+    st.caption(f"**Prompt Hash:** `{ver_info.get('prompt_hash', '')[:10]}...`")
+    st.caption(f"**Tools Hash:** `{ver_info.get('tools_hash', '')[:10]}...`")
 
     with st.expander(f"🛠️ Danh sách Tool ({len(tool_decls)})", expanded=False):
         for tool in tool_decls:
@@ -219,13 +319,14 @@ with st.sidebar:
         st.text_area("System Prompt", value=system_prompt_text, height=200, disabled=True)
 
     st.markdown("---")
-    if st.button("🧹 Làm mới phiên trò chuyện (Reset)", use_container_width=True):
+    if st.button("🧹 Làm mới phiên trò chuyện (Reset)", use_container_width=True, disabled=st.session_state.is_running):
         st.session_state.messages = []
         st.session_state.raw_history = []
         st.session_state.turn_index = 0
         st.session_state.transcript = None
         st.session_state.transcript_path = None
         st.session_state.waiting_for_user = None
+        st.session_state.is_running = False
         st.rerun()
 
     if st.session_state.transcript_path and Path(st.session_state.transcript_path).exists():
@@ -237,6 +338,7 @@ with st.sidebar:
             file_name=Path(st.session_state.transcript_path).name,
             mime="application/json",
             use_container_width=True,
+            disabled=st.session_state.is_running,
         )
 
 
@@ -267,70 +369,114 @@ def get_or_create_transcript() -> tuple[dict[str, Any], Path]:
     return transcript, transcript_path
 
 
-# ----------------- Main Chat Layout -----------------
-st.markdown('<div class="main-header">🌿 Research Agent Workspace</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="sub-header">Hệ thống Nghiên cứu Thông tin Đa Nguồn (X/Twitter, Web, Papers, Policy, Telegram) · VinAI Day 03 Lab v2</div>',
-    unsafe_allow_html=True,
-)
+# ----------------- Top Hero Header Card -----------------
+st.markdown("""
+<div class="hero-banner">
+    <div class="hero-title">🌿 Research Agent Workspace</div>
+    <div class="hero-subtitle">
+        Trợ lý Nghiên cứu Thông tin Đa Nguồn Thông minh · Function Calling (MCP) · VinAI Day 03 Lab v2
+    </div>
+    <div>
+        <span class="badge-chip">🚀 Phiên bản: <b>""" + str(ver_info.get("artifact_version")) + """</b></span>
+        <span class="badge-chip">⚡ Provider: <b>""" + str(provider_name) + """</b></span>
+        <span class="badge-chip">🛠️ Công cụ: <b>""" + str(len(tool_decls)) + """ tools</b></span>
+        <span class="badge-chip">🔒 Guardrail: <b>Active</b></span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-# Badges bar with light green theme
-st.markdown(
-    f'<span class="badge-chip">Phiên bản: {ver_info.get("artifact_version")}</span>'
-    f'<span class="badge-chip badge-provider">Provider: {provider_name}</span>'
-    f'<span class="badge-chip badge-tool">{len(tool_decls)} Tools sẵn sàng</span>',
-    unsafe_allow_html=True,
-)
-
-st.write("")
 
 # ----------------- Quick Prompts for Showdown Demo -----------------
-st.markdown("##### ⚡ Câu hỏi mẫu thử nhanh (Showdown 1-Click Demo):")
+st.markdown("##### ⚡ Câu hỏi mẫu thử nhanh (1-Click Showdown Demo):")
 q_col1, q_col2, q_col3, q_col4 = st.columns(4)
 
 with q_col1:
-    if st.button("📰 Tin tức AI hôm nay", use_container_width=True):
+    if st.button("📰 Tin tức AI hôm nay", use_container_width=True, disabled=st.session_state.is_running):
         st.session_state.quick_prompt = "Tin tức AI hôm nay có gì nổi bật?"
         st.rerun()
 
 with q_col2:
-    if st.button("🐦 Tweet của Sam Altman", use_container_width=True):
+    if st.button("🐦 Tweet của Sam Altman", use_container_width=True, disabled=st.session_state.is_running):
         st.session_state.quick_prompt = "Tweet mới nhất của Sam Altman là gì?"
         st.rerun()
 
 with q_col3:
-    if st.button("🔍 Bàn luận GPT-5 trên X", use_container_width=True):
+    if st.button("🔍 Bàn luận GPT-5 trên X", use_container_width=True, disabled=st.session_state.is_running):
         st.session_state.quick_prompt = "Mọi người đang bàn gì về GPT-5 trên Twitter?"
         st.rerun()
 
 with q_col4:
-    if st.button("📢 Gửi Telegram (Cần xác nhận)", use_container_width=True):
+    if st.button("📢 Gửi Telegram (Cần xác nhận)", use_container_width=True, disabled=st.session_state.is_running):
         st.session_state.quick_prompt = "Gửi bản tin tổng hợp AI hôm nay lên kênh Telegram"
         st.rerun()
 
 st.divider()
 
-# ----------------- Render Chat History -----------------
+
+# ----------------- Render Chat History (Distinct Left/Right Layout) -----------------
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
+    if msg["role"] == "user":
+        # Render User Message (Aligned Right)
+        st.markdown(f"""
+        <div class="user-bubble-wrapper">
+            <div class="user-bubble">
+                <div class="user-meta">🧑‍💻 Bạn</div>
+                <div>{msg["content"]}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # Render Agent Message (Aligned Left)
         tool_rounds = msg.get("rounds", [])
+        tool_html = ""
         if tool_rounds:
             total_calls = sum(len(r.get("tool_calls", [])) for r in tool_rounds)
-            with st.expander(f"🛠️ Chi tiết thực thi công cụ ({total_calls} tool call(s))", expanded=False):
-                for r in tool_rounds:
-                    st.markdown(f"**Vòng {r.get('round', 1)}:**")
-                    for tc in r.get("tool_calls", []):
-                        st.markdown(f"- 🔧 Gọi tool: **`{tc.get('name')}`**")
-                        st.json(tc.get("args", {}), expanded=False)
-                    for res in r.get("tool_results", []):
-                        st.markdown(f"- 📥 Kết quả từ **`{res.get('tool')}`**:")
-                        st.json(res.get("result", {}), expanded=False)
+            tool_badges = " ".join([
+                f'<span class="tool-badge-pill">🔧 {tc.get("name")}</span>'
+                for r in tool_rounds for tc in r.get("tool_calls", [])
+            ])
+            tool_html = f"""
+            <div class="tool-exec-card">
+                <div style="font-size: 0.82rem; font-weight: 700; color: #065F46; margin-bottom: 0.3rem;">
+                    🛠️ Đã thực thi {total_calls} tool call(s): {tool_badges}
+                </div>
+            </div>
+            """
 
-        st.markdown(msg["content"])
+        st.markdown(f"""
+        <div class="agent-bubble-wrapper">
+            <div class="agent-bubble">
+                <div class="agent-meta">🌿 Research Agent</div>
+                {tool_html}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # In Streamlit, render Markdown content properly inside agent bubble area
+        with st.container():
+            col_l, col_r = st.columns([11, 1])
+            with col_l:
+                # Expander for full JSON details if tool was called
+                if tool_rounds:
+                    with st.expander("🔍 Xem chi tiết tham số & JSON kết quả tool", expanded=False):
+                        for r in tool_rounds:
+                            st.markdown(f"**Vòng {r.get('round', 1)}:**")
+                            for tc in r.get("tool_calls", []):
+                                st.markdown(f"- 🔧 **Gọi Tool:** `{tc.get('name')}`")
+                                st.json(tc.get("args", {}), expanded=False)
+                            for res in r.get("tool_results", []):
+                                st.markdown(f"- 📥 **Kết quả từ:** `{res.get('tool')}`")
+                                st.json(res.get("result", {}), expanded=False)
+                # Assistant text with full Markdown rendering
+                st.markdown(msg["content"])
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ----------------- Interactive Clarification / Confirmation Buttons -----------------
-if st.session_state.waiting_for_user:
+if st.session_state.waiting_for_user and not st.session_state.is_running:
     wait_info = st.session_state.waiting_for_user
     st.info(f"❓ **Agent cần bạn xác nhận / làm rõ:** {wait_info.get('question', '')}")
 
@@ -340,7 +486,7 @@ if st.session_state.waiting_for_user:
     if resp_type == "yes_no" or not options:
         c1, c2 = st.columns([1, 1])
         with c1:
-            if st.button("✅ Đồng ý / Xác nhận", key="btn_confirm_yes", type="primary", use_container_width=True):
+            if st.button("✅ Đồng ý / Xác nhận gửi", key="btn_confirm_yes", type="primary", use_container_width=True):
                 st.session_state.quick_prompt = "Tôi xác nhận đồng ý."
                 st.session_state.waiting_for_user = None
                 st.rerun()
@@ -359,23 +505,25 @@ if st.session_state.waiting_for_user:
                     st.rerun()
 
 
-# ----------------- Handle User Input -----------------
-user_input = st.chat_input("Nhập yêu cầu nghiên cứu hoặc câu hỏi...")
-prompt_to_process = None
+# ----------------- Handle User Input with Lock & Loading Effect -----------------
+user_input = st.chat_input(
+    "Nhập yêu cầu nghiên cứu hoặc câu hỏi..." if not st.session_state.is_running else "⏳ Agent đang xử lý yêu cầu, vui lòng chờ...",
+    disabled=st.session_state.is_running,
+)
 
-if st.session_state.quick_prompt:
+prompt_to_process = None
+if st.session_state.quick_prompt and not st.session_state.is_running:
     prompt_to_process = st.session_state.quick_prompt
     st.session_state.quick_prompt = None
-elif user_input:
+elif user_input and not st.session_state.is_running:
     prompt_to_process = user_input.strip()
 
 if prompt_to_process:
-    # 1. Display user message
-    st.session_state.messages.append({"role": "user", "content": prompt_to_process})
-    with st.chat_message("user"):
-        st.markdown(prompt_to_process)
+    # 1. Lock state immediately to prevent spamming
+    st.session_state.is_running = True
 
-    # 2. Prepare message history for Agent
+    # 2. Append User Message
+    st.session_state.messages.append({"role": "user", "content": prompt_to_process})
     st.session_state.turn_index += 1
     transcript, transcript_path = get_or_create_transcript()
 
@@ -395,83 +543,83 @@ if prompt_to_process:
         "tool_events": [],
     }
 
-    # 3. Call Model Tool Loop
-    with st.chat_message("assistant"):
-        with st.spinner("Đang suy luận và gọi tools..."):
-            try:
-                provider = make_provider(provider_name)
-                selected_model = getattr(provider, "default_model", None)
-                if transcript.get("model") is None:
-                    transcript["model"] = selected_model
+    # 3. Dynamic Animated Loading & Step-by-Step Progress
+    with st.status("🌿 Agent đang phân tích yêu cầu và điều phối công cụ...", expanded=True) as status:
+        st.write("📖 **Bước 1:** Đọc quy tắc routing và đối chiếu hệ thống công cụ...")
+        time.sleep(0.3)
 
-                result = run_model_tool_loop(
-                    provider=provider,
-                    messages=messages,
-                    tools=openai_tools,
-                    model=None,
-                    max_tool_rounds=int(max_tool_rounds),
+        try:
+            provider = make_provider(provider_name)
+            selected_model = getattr(provider, "default_model", None)
+            if transcript.get("model") is None:
+                transcript["model"] = selected_model
+
+            st.write("⚙️ **Bước 2:** Gọi LLM Provider để đưa ra quyết định Tool Calling...")
+            result = run_model_tool_loop(
+                provider=provider,
+                messages=messages,
+                tools=openai_tools,
+                model=None,
+                max_tool_rounds=int(max_tool_rounds),
+            )
+            turn_record.update(result)
+            assistant_text = result.get("assistant_text") or "Không có phản hồi từ Agent."
+
+            tool_rounds = result.get("rounds", [])
+            total_calls = sum(len(r.get("tool_calls", [])) for r in tool_rounds)
+            if total_calls > 0:
+                called_tools_list = ", ".join([f"`{tc['name']}`" for r in tool_rounds for tc in r.get("tool_calls", [])])
+                st.write(f"🔧 **Bước 3:** Đã thực thi {total_calls} lượt gọi tool thật: {called_tools_list}")
+            else:
+                st.write("💬 **Bước 3:** Trả lời trực tiếp (không cần gọi công cụ bên ngoài).")
+
+            st.write("📝 **Bước 4:** Tổng hợp thông tin hoàn tất!")
+            status.update(label="✅ Hoàn tất xử lý phản hồi!", state="complete", expanded=False)
+
+            # Update history
+            st.session_state.raw_history.append({"role": "user", "content": prompt_to_process})
+            st.session_state.raw_history.append({"role": "assistant", "content": assistant_text})
+
+            # Check if waiting for user (clarify tool triggered)
+            if result.get("status") == "waiting_for_user":
+                clarify_event = next(
+                    (e for e in result.get("tool_events", []) if e.get("result", {}).get("awaiting_user")),
+                    None,
                 )
-                turn_record.update(result)
-                assistant_text = result.get("assistant_text") or "Không có phản hồi từ Agent."
+                st.session_state.waiting_for_user = {
+                    "question": assistant_text,
+                    "response_type": (clarify_event.get("args", {}).get("response_type") if clarify_event else "text"),
+                    "options": (clarify_event.get("args", {}).get("options") if clarify_event else []),
+                }
+            else:
+                st.session_state.waiting_for_user = None
 
-                # Render tool execution details
-                tool_rounds = result.get("rounds", [])
-                if tool_rounds:
-                    total_calls = sum(len(r.get("tool_calls", [])) for r in tool_rounds)
-                    with st.expander(f"🛠️ Chi tiết thực thi công cụ ({total_calls} tool call(s))", expanded=True):
-                        for r in tool_rounds:
-                            st.markdown(f"**Vòng {r.get('round', 1)}:**")
-                            for tc in r.get("tool_calls", []):
-                                st.markdown(f"- 🔧 Gọi tool: **`{tc.get('name')}`**")
-                                st.json(tc.get("args", {}), expanded=False)
-                            for res in r.get("tool_results", []):
-                                st.markdown(f"- 📥 Kết quả từ **`{res.get('tool')}`**:")
-                                st.json(res.get("result", {}), expanded=False)
+            # Store in session messages
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": assistant_text,
+                "rounds": tool_rounds,
+            })
 
-                st.markdown(assistant_text)
-
-                # Update history
-                st.session_state.raw_history.append({"role": "user", "content": prompt_to_process})
-                st.session_state.raw_history.append({"role": "assistant", "content": assistant_text})
-
-                # Check if waiting for user (clarify tool triggered)
-                if result.get("status") == "waiting_for_user":
-                    clarify_event = next(
-                        (e for e in result.get("tool_events", []) if e.get("result", {}).get("awaiting_user")),
-                        None,
-                    )
-                    st.session_state.waiting_for_user = {
-                        "question": assistant_text,
-                        "response_type": (clarify_event.get("args", {}).get("response_type") if clarify_event else "text"),
-                        "options": (clarify_event.get("args", {}).get("options") if clarify_event else []),
-                    }
-                else:
-                    st.session_state.waiting_for_user = None
-
-                # Store in session messages
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": assistant_text,
-                    "rounds": tool_rounds,
-                })
-
-            except Exception as exc:
-                err_msg = f"{type(exc).__name__}: {str(exc)}"
-                turn_record.update({
-                    "status": "provider_error",
-                    "error": err_msg,
-                })
-                st.error(f"❌ Lỗi Provider: {err_msg}")
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": f"Lỗi xảy ra trong quá trình xử lý: {err_msg}",
-                    "rounds": [],
-                })
+        except Exception as exc:
+            err_msg = f"{type(exc).__name__}: {str(exc)}"
+            turn_record.update({
+                "status": "provider_error",
+                "error": err_msg,
+            })
+            status.update(label="❌ Lỗi trong quá trình xử lý!", state="error", expanded=True)
+            st.error(f"Lỗi Provider: {err_msg}")
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": f"Lỗi xảy ra trong quá trình xử lý: {err_msg}",
+                "rounds": [],
+            })
 
         # Save transcript
         turn_record["ended_at"] = now_iso()
         transcript["turns"].append(turn_record)
         write_transcript(transcript_path, transcript)
 
-    # Rerun to render options or clean layout
+    # 4. Unlock state after completion and rerun
+    st.session_state.is_running = False
     st.rerun()
