@@ -91,74 +91,30 @@ st.markdown("""
         margin-right: 0.5rem;
     }
 
-    /* Chat Messages Layout: Left vs Right Separation */
-    .chat-container {
-        display: flex;
-        flex-direction: column;
-        gap: 1.2rem;
-        margin: 1rem 0 2rem 0;
+    /* Column-based Chat Alignment */
+    /* User Message Bubble (Right Column) */
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stChatMessage"] {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+        border-radius: 18px 18px 4px 18px !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+        border: none !important;
+        padding: 0.9rem 1.2rem !important;
+    }
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stChatMessage"] p,
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stChatMessage"] span,
+    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stChatMessage"] div {
+        color: #FFFFFF !important;
+        font-weight: 500 !important;
     }
 
-    /* User Message Bubble: Aligned Right */
-    .user-bubble-wrapper {
-        display: flex;
-        justify-content: flex-end;
-        width: 100%;
-        margin-bottom: 0.8rem;
-    }
-    .user-bubble {
-        max-width: 75%;
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-        color: #FFFFFF !important;
-        padding: 0.9rem 1.2rem;
-        border-radius: 20px 20px 4px 20px;
-        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.2);
-        font-size: 1rem;
-        line-height: 1.5;
-        word-break: break-word;
-    }
-    .user-bubble * {
-        color: #FFFFFF !important;
-    }
-    .user-meta {
-        font-size: 0.75rem;
-        color: #D1FAE5;
-        margin-bottom: 0.25rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        justify-content: flex-end;
-    }
-
-    /* Assistant Message Bubble: Aligned Left */
-    .agent-bubble-wrapper {
-        display: flex;
-        justify-content: flex-start;
-        width: 100%;
-        margin-bottom: 1rem;
-    }
-    .agent-bubble {
-        max-width: 85%;
-        background-color: #FFFFFF;
-        color: #1F2937;
-        padding: 1.1rem 1.4rem;
-        border-radius: 20px 20px 20px 4px;
-        border: 1px solid #D1FAE5;
-        border-left: 5px solid #10B981;
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
-        font-size: 1rem;
-        line-height: 1.6;
-        word-break: break-word;
-    }
-    .agent-meta {
-        font-size: 0.78rem;
-        color: #059669;
-        margin-bottom: 0.4rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
+    /* Assistant Message Bubble (Left Column) */
+    div[data-testid="stColumn"]:nth-child(1) div[data-testid="stChatMessage"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #D1FAE5 !important;
+        border-left: 5px solid #10B981 !important;
+        border-radius: 18px 18px 18px 4px !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04) !important;
+        padding: 1.1rem 1.3rem !important;
     }
 
     /* Tool Call Execution Card */
@@ -414,54 +370,26 @@ st.divider()
 
 
 # ----------------- Render Chat History (Distinct Left/Right Layout) -----------------
-st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-
 for msg in st.session_state.messages:
     if msg["role"] == "user":
-        # Render User Message (Aligned Right)
-        st.markdown(f"""
-        <div class="user-bubble-wrapper">
-            <div class="user-bubble">
-                <div class="user-meta">🧑‍💻 Bạn</div>
-                <div>{msg["content"]}</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # User message: Pushed to the right (1 part empty space, 4 parts user)
+        col_empty, col_user = st.columns([1, 4])
+        with col_user:
+            with st.chat_message("user", avatar="🧑‍💻"):
+                st.markdown(f"**Bạn**\n\n{msg['content']}")
     else:
-        # Render Agent Message (Aligned Left)
-        tool_rounds = msg.get("rounds", [])
-        tool_html = ""
-        if tool_rounds:
-            total_calls = sum(len(r.get("tool_calls", [])) for r in tool_rounds)
-            tool_badges = " ".join([
-                f'<span class="tool-badge-pill">🔧 {tc.get("name")}</span>'
-                for r in tool_rounds for tc in r.get("tool_calls", [])
-            ])
-            tool_html = f"""
-            <div class="tool-exec-card">
-                <div style="font-size: 0.82rem; font-weight: 700; color: #065F46; margin-bottom: 0.3rem;">
-                    🛠️ Đã thực thi {total_calls} tool call(s): {tool_badges}
-                </div>
-            </div>
-            """
-
-        st.markdown(f"""
-        <div class="agent-bubble-wrapper">
-            <div class="agent-bubble">
-                <div class="agent-meta">🌿 Research Agent</div>
-                {tool_html}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # In Streamlit, render Markdown content properly inside agent bubble area
-        with st.container():
-            col_l, col_r = st.columns([11, 1])
-            with col_l:
-                # Expander for full JSON details if tool was called
-                if tool_rounds:
-                    with st.expander("🔍 Xem chi tiết tham số & JSON kết quả tool", expanded=False):
-                        for r in tool_rounds:
+        # Agent message: Kept on the left (4 parts agent, 1 part empty space)
+        col_agent, col_empty = st.columns([4, 1])
+        with col_agent:
+            with st.chat_message("assistant", avatar="🌿"):
+                tool_rounds = msg.get("rounds", [])
+                # Only show rounds that ACTUALLY contain tool calls (avoid empty Vòng 2)
+                actual_rounds = [r for r in tool_rounds if r.get("tool_calls")]
+                if actual_rounds:
+                    total_calls = sum(len(r.get("tool_calls", [])) for r in actual_rounds)
+                    tool_badges = ", ".join([f"`{tc['name']}`" for r in actual_rounds for tc in r.get("tool_calls", [])])
+                    with st.expander(f"🛠️ Đã thực thi {total_calls} tool call(s): {tool_badges}", expanded=False):
+                        for r in actual_rounds:
                             st.markdown(f"**Vòng {r.get('round', 1)}:**")
                             for tc in r.get("tool_calls", []):
                                 st.markdown(f"- 🔧 **Gọi Tool:** `{tc.get('name')}`")
@@ -469,10 +397,9 @@ for msg in st.session_state.messages:
                             for res in r.get("tool_results", []):
                                 st.markdown(f"- 📥 **Kết quả từ:** `{res.get('tool')}`")
                                 st.json(res.get("result", {}), expanded=False)
-                # Assistant text with full Markdown rendering
+                
+                # Assistant response text cleanly inside the card
                 st.markdown(msg["content"])
-
-st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ----------------- Interactive Clarification / Confirmation Buttons -----------------
