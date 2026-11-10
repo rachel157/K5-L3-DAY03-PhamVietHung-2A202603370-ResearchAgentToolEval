@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Research Agent — Giới thiệu và dùng thử</title>
+  <style>
+    :root{color-scheme:light;--ink:#142e38;--muted:#50666d;--line:#d5e1df;--green:#176a57}
+    *{box-sizing:border-box}body{margin:0;background:#edf2ee;color:var(--ink);font:16px/1.6 system-ui,sans-serif}
+    main{max-width:1120px;margin:32px auto;padding:48px;background:#fffdf7;border:1px solid var(--line);border-radius:24px}
+    .eyebrow{font-size:13px;font-weight:750;letter-spacing:.14em;color:var(--green)}
+    h1{font-size:clamp(40px,7vw,76px);line-height:1.05;letter-spacing:-.045em;margin:22px 0}h2{font-size:25px;margin:0 0 14px}h3{font-size:17px;margin:0 0 6px}
+    .intro{font-size:21px;max-width:780px;color:var(--muted)}.status{padding:16px 20px;background:#fff0d6;border-left:4px solid #9b5d0c;border-radius:8px;margin:28px 0}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px}.panel{border:1px solid var(--line);padding:24px;border-radius:16px}
+    .tools{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tool{border-top:1px solid var(--line);padding-top:12px}.tool p{margin:0;color:var(--muted);font-size:14px}
+    code{font-size:13px;font-weight:700;color:var(--green)}ol{padding-left:24px}li{padding:6px 0}.flow{display:flex;flex-wrap:wrap;gap:10px;margin:28px 0}.flow span{background:#e9f2eb;padding:9px 14px;border-radius:30px;font-weight:650}
+    .demo{background:#143e37;color:#fff;padding:25px;border-radius:16px;margin-top:28px}.demo p{margin:8px 0}.demo small{color:#d0e2db}
+    footer{margin-top:28px;color:var(--muted);font-size:13px}a{color:var(--green)}
+    @media(max-width:760px){main{margin:12px;padding:24px}.grid{grid-template-columns:1fr}.tools{grid-template-columns:1fr}.intro{font-size:18px}}
+    @media print{body{background:white}main{margin:0;border:0;padding:15px}.panel,.demo,.status{break-inside:avoid}h1{font-size:48px}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">VINUNI AI THỰC CHIẾN · COHORT 5 · DAY 03</div>
+    <h1>Research Agent</h1>
+    <p class="intro">Tìm thông tin từ nhiều nguồn, đọc nội dung gốc và tạo bản tổng hợp có trích dẫn. Mở rộng nghiên cứu với GitHub, Hacker News, Wikipedia và ghi chú Markdown.</p>
+  </header>
+  <div class="status"><strong>Bản chuẩn bị demo.</strong> Code có 14 tool; 4 tool mới chờ ghép schema. Chưa có log API thật hoặc link public để xác nhận agent hoạt động đầy đủ.</div>
+  <div class="flow" aria-label="Luồng hoạt động"><span>01 · Nhận yêu cầu</span><span>02 · Chọn công cụ</span><span>03 · Lấy dữ liệu</span><span>04 · Tổng hợp có nguồn</span></div>
+  <div class="grid">
+    <section class="panel">
+      <h2>Nguồn và công cụ</h2>
+      <div class="tools">
+        <div class="tool"><h3>Web</h3><p><code>lookup · fetch</code><br>Tìm tin và đọc URL.</p></div>
+        <div class="tool"><h3>Mạng xã hội X</h3><p><code>timeline · social_search</code><br>Theo tài khoản hoặc từ khóa.</p></div>
+        <div class="tool"><h3>Nghiên cứu</h3><p><code>papers · paper_text · policy</code><br>arXiv và chính sách nội bộ.</p></div>
+        <div class="tool"><h3>Trình bày và điều phối</h3><p><code>format · clarify · send</code><br>Digest, hỏi lại và gửi Telegram.</p></div>
+        <div class="tool"><h3>Khám phá mã nguồn · Mới</h3><p><code>github_search</code><br>Tìm repository theo sao, fork hoặc cập nhật.</p></div>
+        <div class="tool"><h3>Thảo luận công nghệ · Mới</h3><p><code>hackernews</code><br>Tìm story theo từ khóa.</p></div>
+        <div class="tool"><h3>Khái niệm · Mới</h3><p><code>wikipedia</code><br>Tóm tắt Wikipedia tiếng Anh.</p></div>
+        <div class="tool"><h3>Ghi chú · Mới</h3><p><code>save_note</code><br>Lưu Markdown sau khi xác nhận.</p></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>5 yêu cầu để dùng thử</h2>
+      <ol>
+        <li>Tìm 3 tin tức trên web về AI trong hôm nay.</li>
+        <li>Đọc và tóm tắt https://www.python.org/about/.</li>
+        <li>Tìm 4 repository GitHub với truy vấn RAG, sắp xếp theo số sao.</li>
+        <li>Tìm 3 bài thảo luận Hacker News với từ khóa Rust.</li>
+        <li>Chuẩn bị gửi “Bản tin thử nghiệm của nhóm” lên Telegram; hỏi tôi xác nhận trước.</li>
+      </ol>
+      <p>Yêu cầu 3–4 dùng được sau khi TV2 ghép schema mới.</p>
+      <h3>Điểm cần quan sát khi demo</h3>
+      <p>Agent hỏi lại khi thiếu thông tin, chọn đúng nguồn, giữ tham số qua hội thoại và chờ xác nhận trước hành động gửi hoặc lưu.</p>
+      <p><strong>Bộ đánh giá:</strong> 10 case · 5 single-turn · 5 multi-turn · 6 loại lỗi · 2 case tool mới. Chưa chạy model thật.</p>
+    </section>
+  </div>
+  <section class="demo" aria-label="Thông tin dùng thử">
+    <h2>Link dùng thử</h2>
+    <p>Chờ TV5 bàn giao URL public sau Push #7.</p>
+    <small>Chỉ công bố link sau khi kiểm tra từ máy khác. Không đặt API key trong poster.</small>
+  </section>
+  <footer>Thông tin nhóm: chờ xác nhận trong TEAM.md · Chi tiết bằng chứng: <a href="REPORT.md">REPORT.md</a> · Cập nhật 10/11/2026</footer>
+</main>
+</body>
+</html>
