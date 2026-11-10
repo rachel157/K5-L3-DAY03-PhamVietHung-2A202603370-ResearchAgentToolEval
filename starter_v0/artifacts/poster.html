@@ -1,69 +1,149 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Research Agent — Giới thiệu và dùng thử</title>
-  <style>
-    :root{color-scheme:light;--ink:#142e38;--muted:#50666d;--line:#d5e1df;--green:#176a57}
-    *{box-sizing:border-box}body{margin:0;background:#edf2ee;color:var(--ink);font:16px/1.6 system-ui,sans-serif}
-    main{max-width:1120px;margin:32px auto;padding:48px;background:#fffdf7;border:1px solid var(--line);border-radius:24px}
-    .eyebrow{font-size:13px;font-weight:750;letter-spacing:.14em;color:var(--green)}
-    h1{font-size:clamp(40px,7vw,76px);line-height:1.05;letter-spacing:-.045em;margin:22px 0}h2{font-size:25px;margin:0 0 14px}h3{font-size:17px;margin:0 0 6px}
-    .intro{font-size:21px;max-width:780px;color:var(--muted)}.status{padding:16px 20px;background:#fff0d6;border-left:4px solid #9b5d0c;border-radius:8px;margin:28px 0}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px}.panel{border:1px solid var(--line);padding:24px;border-radius:16px}
-    .tools{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tool{border-top:1px solid var(--line);padding-top:12px}.tool p{margin:0;color:var(--muted);font-size:14px}
-    code{font-size:13px;font-weight:700;color:var(--green)}ol{padding-left:24px}li{padding:6px 0}.flow{display:flex;flex-wrap:wrap;gap:10px;margin:28px 0}.flow span{background:#e9f2eb;padding:9px 14px;border-radius:30px;font-weight:650}
-    .demo{background:#143e37;color:#fff;padding:25px;border-radius:16px;margin-top:28px}.demo p{margin:8px 0}.demo small{color:#d0e2db}
-    footer{margin-top:28px;color:var(--muted);font-size:13px}a{color:var(--green)}
-    @media(max-width:760px){main{margin:12px;padding:24px}.grid{grid-template-columns:1fr}.tools{grid-template-columns:1fr}.intro{font-size:18px}}
-    @media print{body{background:white}main{margin:0;border:0;padding:15px}.panel,.demo,.status{break-inside:avoid}h1{font-size:48px}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research Agent · Từ v1 đến v2</title>
+<style>
+:root{color-scheme:dark;--bg:#0f1420;--panel:#171e2e;--panel2:#1e2740;--line:#2a3550;--text:#e8ecf5;--muted:#a6b2ca;--accent:#ffb547;--green:#5ad1a0;--blue:#6aa8ff;--red:#ff8585;--code:#0b0f18}
+*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--bg);color:var(--text);font-family:"Be Vietnam Pro","Segoe UI",sans-serif;overflow:hidden}
+button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:4px}code,pre,.mono{font-family:"JetBrains Mono",Consolas,monospace}
+.topbar{height:64px;position:fixed;inset:0 0 auto;display:flex;align-items:center;gap:20px;padding:0 4vw;border-bottom:1px solid var(--line);background:var(--bg);z-index:5}.brand{font-weight:800;white-space:nowrap}.brand span{color:var(--accent)}.tabs{display:flex;gap:4px;background:var(--panel);padding:4px;border:1px solid var(--line);border-radius:10px}.tabs button{border:0;background:transparent;color:var(--muted);border-radius:7px;padding:7px 12px;font-size:13px;font-weight:650;white-space:nowrap}.tabs button[aria-selected=true]{background:var(--accent);color:#201604}.provider{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.deck{position:absolute;inset:64px 0 52px}.slide{display:none;height:100%;padding:32px 5vw 24px;overflow:auto;flex-direction:column;gap:24px}.slide.active{display:flex;animation:appear .2s ease}@keyframes appear{from{opacity:.4;transform:translateY(5px)}to{opacity:1;transform:none}}
+.kicker{text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:750;font-size:13px;margin-bottom:10px}h1{font-size:clamp(46px,6.5vw,94px);letter-spacing:-.045em;line-height:1.04}h2{font-size:clamp(30px,3.5vw,50px);line-height:1.15;letter-spacing:-.025em}h3{font-size:19px;line-height:1.4}.sub{font-size:clamp(16px,1.6vw,21px);color:var(--muted);line-height:1.6;margin-top:14px;max-width:65ch}.accent{color:var(--accent)}.green{color:var(--green)}.muted{color:var(--muted)}
+.columns{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:32px;flex:1;align-items:center;min-height:min-content}.stack{display:flex;flex-direction:column;gap:16px}.card{padding:22px 24px;border:1px solid var(--line);background:var(--panel);border-radius:16px;min-width:0}.label{text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;font-size:12px;margin-bottom:12px}.card p{color:var(--muted);line-height:1.6;margin-top:8px}.metric{font-size:clamp(48px,6vw,86px);font-weight:800;line-height:1.1;letter-spacing:-.04em}.metric small{font-size:.26em;color:var(--muted);font-weight:500;letter-spacing:0}.big-stat{display:flex;align-items:center;gap:24px}.arrow{font-size:36px;color:var(--muted)}.tag{display:inline-block;padding:5px 10px;background:#142f2a;border:1px solid #2e6954;color:var(--green);border-radius:30px;font-size:12px;font-weight:700}.tag.bad{color:var(--red);background:#321e29;border-color:#684050}.note{font-size:13px;line-height:1.6;color:var(--muted)}.highlight{border-color:#3b6859;background:#142720}.footnote{border-top:1px solid var(--line);padding-top:12px;font-size:12px;line-height:1.6;color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:17px;font-size:15px;line-height:1.5}.step b{display:block;color:var(--accent);font-size:25px;margin-bottom:5px}.quote{font-size:clamp(22px,2.5vw,35px);line-height:1.45;border-left:3px solid var(--accent);padding-left:22px;margin:20px 0}.compare{display:grid;grid-template-columns:1fr 1fr;gap:16px}.compare .card{display:flex;flex-direction:column;gap:10px}pre{background:var(--code);border:1px solid var(--line);padding:14px;border-radius:9px;font-size:13px;line-height:1.7;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:#cfe3ff}code{color:#ffd79a;font-size:.9em}.checklist{list-style:none;display:grid;gap:12px;margin-top:12px}.checklist li{padding-left:24px;position:relative;line-height:1.55;color:var(--muted)}.checklist li:before{content:'✓';position:absolute;left:0;color:var(--green);font-weight:800}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:17px 12px;border-bottom:1px solid var(--line);font-size:17px}th{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.06em}td:last-child{color:var(--green);font-weight:750}.toolgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.toolgrid .card{padding:18px}.toolgrid h3{font-size:17px}.toolgrid p{font-size:14px}.examples{counter-reset:examples;list-style:none;display:grid;gap:10px}.examples li{counter-increment:examples;display:flex;gap:16px;align-items:center;padding:14px 18px;border:1px solid var(--line);background:var(--panel);border-radius:12px;font-size:17px;line-height:1.5}.examples li:before{content:counter(examples,decimal-leading-zero);color:var(--accent);font-weight:800;font-family:Consolas,monospace}
+.bottom{position:fixed;inset:auto 0 0;height:52px;display:flex;align-items:center;gap:18px;padding:0 4vw;background:var(--bg);border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.progress{height:4px;background:var(--panel2);border-radius:20px;flex:1}.progress i{display:block;height:100%;background:var(--accent);border-radius:20px;transition:width .2s}.nav{display:flex;gap:8px}.nav button,.fullscreen{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:5px 12px}.nav button:disabled{opacity:.3;cursor:default}a{color:var(--blue)}
+@media(max-width:950px){.provider{display:none}.topbar{gap:12px;padding:0 16px;overflow-x:auto}.brand{font-size:13px}.tabs button{padding:7px 9px}.slide{padding:24px 20px}.columns{grid-template-columns:1fr;gap:20px}.toolgrid{grid-template-columns:1fr 1fr}.steps{grid-template-columns:1fr 1fr}.metric{font-size:60px}.hint{display:none}}
+@media(max-width:560px){.brand{display:none}.compare{grid-template-columns:1fr}.toolgrid{grid-template-columns:1fr}.card{padding:18px}.bottom{padding:0 15px;gap:10px}th,td{padding:14px 6px;font-size:14px}.fullscreen{display:none}}
+@media(prefers-reduced-motion:reduce){.slide.active{animation:none}.progress i{transition:none}}
+@media print{html,body{height:auto;overflow:visible}.topbar,.bottom{display:none}.deck{position:static}.slide,.slide.active{display:flex;min-height:95vh;height:auto;overflow:visible;break-after:page;padding:25px}.slide:last-child{break-after:auto}.card{break-inside:avoid}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
 </head>
 <body>
-<main>
-  <header>
-    <div class="eyebrow">VINUNI AI THỰC CHIẾN · COHORT 5 · DAY 03</div>
-    <h1>Research Agent</h1>
-    <p class="intro">Tìm thông tin từ nhiều nguồn, đọc nội dung gốc và tạo bản tổng hợp có trích dẫn. Mở rộng nghiên cứu với GitHub, Hacker News, Wikipedia và ghi chú Markdown.</p>
-  </header>
-  <div class="status"><strong>Bản chuẩn bị demo.</strong> Code có 14 tool; 4 tool mới chờ ghép schema. Chưa có log API thật hoặc link public để xác nhận agent hoạt động đầy đủ.</div>
-  <div class="flow" aria-label="Luồng hoạt động"><span>01 · Nhận yêu cầu</span><span>02 · Chọn công cụ</span><span>03 · Lấy dữ liệu</span><span>04 · Tổng hợp có nguồn</span></div>
-  <div class="grid">
-    <section class="panel">
-      <h2>Nguồn và công cụ</h2>
-      <div class="tools">
-        <div class="tool"><h3>Web</h3><p><code>lookup · fetch</code><br>Tìm tin và đọc URL.</p></div>
-        <div class="tool"><h3>Mạng xã hội X</h3><p><code>timeline · social_search</code><br>Theo tài khoản hoặc từ khóa.</p></div>
-        <div class="tool"><h3>Nghiên cứu</h3><p><code>papers · paper_text · policy</code><br>arXiv và chính sách nội bộ.</p></div>
-        <div class="tool"><h3>Trình bày và điều phối</h3><p><code>format · clarify · send</code><br>Digest, hỏi lại và gửi Telegram.</p></div>
-        <div class="tool"><h3>Khám phá mã nguồn · Mới</h3><p><code>github_search</code><br>Tìm repository theo sao, fork hoặc cập nhật.</p></div>
-        <div class="tool"><h3>Thảo luận công nghệ · Mới</h3><p><code>hackernews</code><br>Tìm story theo từ khóa.</p></div>
-        <div class="tool"><h3>Khái niệm · Mới</h3><p><code>wikipedia</code><br>Tóm tắt Wikipedia tiếng Anh.</p></div>
-        <div class="tool"><h3>Ghi chú · Mới</h3><p><code>save_note</code><br>Lưu Markdown sau khi xác nhận.</p></div>
+<header class="topbar">
+  <div class="brand">DAY 03 <span>· RESEARCH AGENT</span></div>
+  <nav class="tabs" role="tablist" aria-label="Các phần của poster">
+    <button id="tab-0" role="tab" aria-controls="slide-0" aria-selected="true" data-slide="0">Tổng quan</button>
+    <button id="tab-1" role="tab" aria-controls="slide-1" aria-selected="false" data-slide="1">Lỗi đã sửa</button>
+    <button id="tab-2" role="tab" aria-controls="slide-2" aria-selected="false" data-slide="2">Kết quả</button>
+    <button id="tab-3" role="tab" aria-controls="slide-3" aria-selected="false" data-slide="3">Công cụ</button>
+    <button id="tab-4" role="tab" aria-controls="slide-4" aria-selected="false" data-slide="4">Câu hỏi mẫu</button>
+  </nav>
+  <div class="provider">OpenAI · gpt-4o-mini</div>
+</header>
+<main class="deck">
+  <section id="slide-0" class="slide active" role="tabpanel" aria-labelledby="tab-0">
+    <div class="columns">
+      <div>
+        <div class="kicker">VINUNI AI THỰC CHIẾN · COHORT 5</div>
+        <h1>Research Agent<br><span class="accent">Từ v1 đến v2.</span></h1>
+        <p class="sub">Chọn đúng nguồn, truyền đúng tham số và theo yêu cầu mới nhất của người dùng trong hội thoại.</p>
+        <p class="sub">Tìm tin web, đọc URL, tra cứu bài đăng X, paper và chính sách; mở rộng với 4 công cụ nghiên cứu mới.</p>
       </div>
-    </section>
-    <section class="panel">
-      <h2>5 yêu cầu để dùng thử</h2>
-      <ol>
-        <li>Tìm 3 tin tức trên web về AI trong hôm nay.</li>
-        <li>Đọc và tóm tắt https://www.python.org/about/.</li>
-        <li>Tìm 4 repository GitHub với truy vấn RAG, sắp xếp theo số sao.</li>
-        <li>Tìm 3 bài thảo luận Hacker News với từ khóa Rust.</li>
-        <li>Chuẩn bị gửi “Bản tin thử nghiệm của nhóm” lên Telegram; hỏi tôi xác nhận trước.</li>
-      </ol>
-      <p>Yêu cầu 3–4 dùng được sau khi TV2 ghép schema mới.</p>
-      <h3>Điểm cần quan sát khi demo</h3>
-      <p>Agent hỏi lại khi thiếu thông tin, chọn đúng nguồn, giữ tham số qua hội thoại và chờ xác nhận trước hành động gửi hoặc lưu.</p>
-      <p><strong>Bộ đánh giá:</strong> 10 case · 5 single-turn · 5 multi-turn · 6 loại lỗi · 2 case tool mới. Chưa chạy model thật.</p>
-    </section>
-  </div>
-  <section class="demo" aria-label="Thông tin dùng thử">
-    <h2>Link dùng thử</h2>
-    <p>Chờ TV5 bàn giao URL public sau Push #7.</p>
-    <small>Chỉ công bố link sau khi kiểm tra từ máy khác. Không đặt API key trong poster.</small>
+      <div class="stack">
+        <div class="card highlight">
+          <div class="label">Độ chính xác · Base eval</div>
+          <div class="big-stat"><div class="metric">95<small>% v1</small></div><span class="arrow">→</span><div class="metric green">100<small>% v2</small></div></div>
+          <p>19/20 → 20/20 case · tăng 5 điểm phần trăm.</p>
+        </div>
+        <div class="card"><span class="tag">M06 · FAIL → PASS</span><h3 style="margin-top:12px">Bỏ đúng nguồn người dùng đã hủy</h3><p>v2 chỉ gọi <code>lookup</code> khi người dùng chuyển từ Twitter sang web; không gọi thêm <code>social_search</code>.</p></div>
+      </div>
+    </div>
+    <div class="steps"><div class="step"><b>01</b>Đọc yêu cầu và ngữ cảnh</div><div class="step"><b>02</b>Chọn tool và args</div><div class="step"><b>03</b>Thực thi công cụ</div><div class="step"><b>04</b>Tổng hợp và trích nguồn</div></div>
+    <p class="footnote">Các tỷ lệ đo routing/arguments trên 20 case base cùng model. Không phải tỷ lệ thành công API hoặc chất lượng câu trả lời cuối.</p>
   </section>
-  <footer>Thông tin nhóm: chờ xác nhận trong TEAM.md · Chi tiết bằng chứng: <a href="REPORT.md">REPORT.md</a> · Cập nhật 10/11/2026</footer>
+  <section id="slide-1" class="slide" role="tabpanel" aria-labelledby="tab-1" hidden>
+    <header><div class="kicker">Khắc phục từ v1 sang v2 · M06_switch_tool</div><h2>Đổi nguồn là bỏ nguồn cũ.</h2></header>
+    <div class="columns">
+      <div>
+        <div class="label">Ngữ cảnh thực tế trong bộ eval</div>
+        <p class="quote">“Mọi người nói gì về OpenAI trên Twitter?”<br><span class="accent">“Bỏ Twitter, chuyển sang tìm trên web tin tức đi.”</span><br>“Giữ chủ đề OpenAI.”</p>
+        <p class="note">Lượt cuối kế thừa chủ đề OpenAI; yêu cầu đổi nguồn trước đó vẫn có hiệu lực.</p>
+      </div>
+      <div class="compare">
+        <div class="card"><span class="tag bad">v1 · FAIL</span><h3>Gọi thêm nguồn đã hủy</h3><pre>lookup(query="OpenAI",
+       topic="news", ...)
+
+social_search(query="OpenAI",
+              ...)</pre><p>Lỗi trong log:<br><code>extra tool call social_search</code></p></div>
+        <div class="card highlight"><span class="tag">v2 · PASS</span><h3>Chỉ gọi nguồn cần dùng</h3><pre>lookup(
+  query="OpenAI",
+  topic="news"
+)</pre><p>Đúng tool và arguments mong đợi; không có lời gọi thừa.</p></div>
+      </div>
+    </div>
+    <div class="card"><div class="label">Thay đổi trong artifact</div><ul class="checklist"><li>Prompt phân biệt yêu cầu nhiều nguồn cùng lúc với yêu cầu chuyển nguồn qua nhiều lượt.</li><li>Mô tả tool nêu rõ “khi nào dùng / khi nào không dùng”, giúp tách timeline, social_search, lookup và fetch.</li><li>Schema tích hợp thêm github_search, hackernews, wikipedia và save_note.</li></ul></div>
+    <p class="footnote">Đây là lỗi còn lại của v1 đã được quan sát là PASS ở v2. Run thay đổi artifact không cô lập hoàn toàn tác động từng quy tắc.</p>
+  </section>
+  <section id="slide-2" class="slide" role="tabpanel" aria-labelledby="tab-2" hidden>
+    <header><div class="kicker">Bằng chứng đo được · Cùng model và suite base</div><h2>19/20 → <span class="green">20/20 case.</span></h2></header>
+    <div class="columns">
+      <div class="card"><table><caption class="label">So sánh kết quả v1 và v2</caption><thead><tr><th scope="col">Chỉ số</th><th scope="col">v1</th><th scope="col">v2</th></tr></thead><tbody><tr><th scope="row">Case accuracy</th><td>95%</td><td>100%</td></tr><tr><th scope="row">Tool routing</th><td>95%</td><td>100%</td></tr><tr><th scope="row">Argument accuracy</th><td>95%</td><td>100%</td></tr><tr><th scope="row">Multi-turn</th><td>83,33% · 5/6</td><td>100% · 6/6</td></tr><tr><th scope="row">Provider error</th><td>0</td><td>0</td></tr></tbody></table></div>
+      <div class="stack">
+        <div class="card highlight"><div class="label">Kiểm thử code hiện tại</div><div class="metric green">110 <small>test PASS</small></div><p>0 failed · 0 skipped. Kết quả pytest không đồng nghĩa mọi nhánh lỗi đều đã được kiểm tra đầy đủ.</p></div>
+        <div class="card"><div class="label">Phạm vi của kết quả</div><h3>Routing đúng; API cần được kiểm chứng riêng.</h3><p>Log v2 có 15 lượt tool lỗi do thiếu key Tavily, Firecrawl hoặc RapidAPI. Evaluator vẫn chấm tool calls/args, nên không suy ra tra cứu đã thành công.</p></div>
+      </div>
+    </div>
+    <p class="footnote">Nguồn: <a href="../runs/v1_B_base_openai_20261110T103950993649.json">Run v1</a> · <a href="../runs/v2_B_base_openai_20261110T112028833894.json">Run v2</a> · <a href="version_log.csv">Version log</a>. Kiểm tra code và log ngày 10/11/2026.</p>
+  </section>
+  <section id="slide-3" class="slide" role="tabpanel" aria-labelledby="tab-3" hidden>
+    <header><div class="kicker">14 tool đã có code và schema</div><h2>Mỗi nguồn một công cụ phù hợp.</h2><p class="sub">4 tool mới mở rộng khả năng khám phá tài liệu, cộng đồng và mã nguồn.</p></header>
+    <div class="toolgrid">
+      <article class="card"><div class="label">Web</div><h3>lookup · fetch</h3><p>Tìm tin bằng Tavily; đọc URL cụ thể bằng Firecrawl.</p></article>
+      <article class="card"><div class="label">Twitter / X</div><h3>timeline · social_search</h3><p>Theo tài khoản cụ thể hoặc tìm theo chủ đề.</p></article>
+      <article class="card"><div class="label">Nghiên cứu</div><h3>papers · paper_text</h3><p>Tìm paper arXiv và trích xuất nội dung PDF.</p></article>
+      <article class="card"><div class="label">Điều phối và trình bày</div><h3>policy · clarify<br>format · send</h3><p>Tra chính sách, hỏi lại, tạo digest và gửi Telegram.</p></article>
+      <article class="card highlight"><div class="label green">Tool mới / 01</div><h3>github_search</h3><p>Tìm repository; sắp xếp theo stars, forks hoặc updated.</p></article>
+      <article class="card highlight"><div class="label green">Tool mới / 02</div><h3>hackernews</h3><p>Tìm story và chủ đề thảo luận công nghệ.</p></article>
+      <article class="card highlight"><div class="label green">Tool mới / 03</div><h3>wikipedia</h3><p>Đọc tóm tắt khái niệm từ Wikipedia tiếng Anh.</p></article>
+      <article class="card highlight"><div class="label green">Tool mới / 04</div><h3>save_note</h3><p>Lưu kết quả thành Markdown sau khi xác nhận.</p></article>
+    </div>
+    <div class="card"><h3>Ranh giới hành động</h3><p>Prompt yêu cầu xác nhận trước khi gửi Telegram hoặc lưu file; hỏi bổ sung khi thiếu tài khoản hay URL. Đây là quy tắc của hệ thống, cần đọc kết quả tool để xác minh hành động.</p></div>
+  </section>
+  <section id="slide-4" class="slide" role="tabpanel" aria-labelledby="tab-4" hidden>
+    <header><div class="kicker">Kịch bản giới thiệu agent</div><h2>5 câu hỏi để thử khả năng routing.</h2></header>
+    <ol class="examples"><li>Tìm 3 tin tức trên web về AI trong hôm nay.</li><li>Đọc và tóm tắt https://www.python.org/about/.</li><li>Tìm 4 repository GitHub với truy vấn RAG, sắp xếp theo số sao.</li><li>Tìm 3 bài thảo luận Hacker News với từ khóa Rust.</li><li>Chuẩn bị gửi “Bản tin thử nghiệm của nhóm” lên Telegram; hỏi tôi xác nhận trước khi gửi.</li></ol>
+    <div class="steps"><div class="step"><b>10</b>Case nhóm đã thiết kế</div><div class="step"><b>5 + 5</b>Single-turn và multi-turn</div><div class="step"><b>6</b>Loại lỗi được bao phủ</div><div class="step"><b>2</b>Case cho tool mới</div></div>
+    <p class="footnote">Bộ case nhóm là thiết kế kiểm thử; số liệu 95% → 100% ở các trang trước thuộc suite base. <a href="REPORT.md">Đọc báo cáo và bằng chứng</a>.</p>
+  </section>
 </main>
+<footer class="bottom"><span id="pageNo" aria-live="polite">01 / 05</span><div class="progress" aria-hidden="true"><i id="progress" style="width:20%"></i></div><span class="hint">← → chuyển trang · F toàn màn hình</span><button class="fullscreen" id="fullscreen" type="button">Toàn màn hình</button><div class="nav"><button id="prev" type="button" aria-label="Trang trước" disabled>←</button><button id="next" type="button" aria-label="Trang sau">→</button></div></footer>
+<script>
+const pages=Array.from(document.querySelectorAll('.slide'));
+const tabs=Array.from(document.querySelectorAll('[data-slide]'));
+let current=0;
+function show(index,focusTab=false){
+ current=Math.max(0,Math.min(pages.length-1,index));
+ pages.forEach((page,i)=>{page.hidden=i!==current;page.classList.toggle('active',i===current)});
+ tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===current));tab.tabIndex=i===current?0:-1});
+ document.getElementById('pageNo').textContent=String(current+1).padStart(2,'0')+' / '+String(pages.length).padStart(2,'0');
+ document.getElementById('progress').style.width=((current+1)/pages.length*100)+'%';
+ document.getElementById('prev').disabled=current===0;
+ document.getElementById('next').disabled=current===pages.length-1;
+ history.replaceState(null,'','#slide-'+(current+1));
+ if(focusTab)tabs[current].focus();
+}
+tabs.forEach(tab=>tab.addEventListener('click',()=>show(Number(tab.dataset.slide))));
+document.getElementById('prev').addEventListener('click',()=>show(current-1));
+document.getElementById('next').addEventListener('click',()=>show(current+1));
+async function toggleFullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen()}catch{document.getElementById('fullscreen').textContent='Dùng F11'}}
+document.getElementById('fullscreen').addEventListener('click',toggleFullscreen);
+document.addEventListener('fullscreenchange',()=>{document.getElementById('fullscreen').textContent=document.fullscreenElement?'Thu nhỏ':'Toàn màn hình'});
+document.addEventListener('keydown',event=>{
+ if(event.ctrlKey||event.metaKey||event.altKey)return;
+ const onTab=event.target.getAttribute('role')==='tab';
+ if(['ArrowRight','PageDown'].includes(event.key)){event.preventDefault();show(current+1,onTab)}
+ else if(['ArrowLeft','PageUp'].includes(event.key)){event.preventDefault();show(current-1,onTab)}
+ else if(event.key==='Home'){event.preventDefault();show(0,onTab)}
+ else if(event.key==='End'){event.preventDefault();show(pages.length-1,onTab)}
+ else if(event.key.toLowerCase()==='f'){event.preventDefault();toggleFullscreen()}
+});
+let touchX=null,touchY=null;
+document.querySelector('main').addEventListener('touchstart',event=>{touchX=event.changedTouches[0].clientX;touchY=event.changedTouches[0].clientY},{passive:true});
+document.querySelector('main').addEventListener('touchend',event=>{if(touchX===null)return;const dx=event.changedTouches[0].clientX-touchX,dy=event.changedTouches[0].clientY-touchY;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.5)show(current+(dx<0?1:-1));touchX=null},{passive:true});
+const start=Number(location.hash.replace('#slide-',''));show(Number.isFinite(start)&&start>0?start-1:0);
+</script>
 </body>
 </html>
