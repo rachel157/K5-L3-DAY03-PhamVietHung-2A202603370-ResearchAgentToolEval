@@ -130,7 +130,6 @@ tools:
       type: object
       properties:
         query: {type: string, default: "", description: "Từ khóa chủ đề công nghệ thảo luận"}
-        tags: {type: string, enum: [story, comment, poll, show_hn, ask_hn], default: "story", description: "Loại bài đăng trên HackerNews"}
         limit: {type: integer, default: 5, description: "Số lượng kết quả"}
       required: [query]
 

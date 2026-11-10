@@ -1,9 +1,9 @@
 {
-  "run_id": "v2_B_base_openai_20261110T111325330847",
+  "run_id": "v2_B_base_openai_20261110T112028833894",
   "version": "v2",
-  "artifact_version": "v2+pe63c60277184+tb323548a614d",
+  "artifact_version": "v2+pe63c60277184+t0118f8a9d399",
   "prompt_hash": "e63c602771845e9de1acf6006df890dffdc452b47039d8a4df0f8c4012ebe2f4",
-  "tools_hash": "b323548a614d0760384bd3b0bafcb03b130d0acfd2b2b8620e9bf80e21df04b2",
+  "tools_hash": "0118f8a9d3992a2ac35ff40f3d1f2bfb480ac73d7250be58521c92e49af877ec",
   "phase": "B",
   "suite": "base",
   "provider": "openai",
@@ -14,7 +14,7 @@
   "dataset_id": "day04_v2_research_base",
   "dataset_role": "base",
   "description": "Core eval cho research agent: routing đúng tool + đúng args, hỏi lại khi thiếu (ask_user), xác nhận trước khi gửi, và xử lý câu ngoài phạm vi / không cần tool. Chấm trên tool_calls + args (subset). KHÔNG sửa file này — chỉ thêm case vào eval_group.json.",
-  "generated_at": "2026-11-10T11:13:25",
+  "generated_at": "2026-11-10T11:20:28",
   "summary": {
     "total_cases": 20,
     "measured_cases": 20,
@@ -445,7 +445,7 @@
         "routing_correct": true,
         "args_correct": true,
         "actual_tool_calls": [],
-        "actual_text": "Xin lỗi, nhưng mình không thể giúp bạn với bài toán tích phân. Nếu bạn có câu hỏi khác liên quan đến nghiên cứu hoặc tin tức, hãy cho mình biết!",
+        "actual_text": "Xin lỗi, nhưng mình không thể giúp bạn với bài toán tích phân. Nếu bạn có câu hỏi nào khác liên quan đến nghiên cứu hoặc tin tức, hãy cho mình biết!",
         "case_failure_type": "out_of_scope",
         "observed_mismatch": null,
         "failure_type": null,
@@ -474,7 +474,7 @@
         "routing_correct": true,
         "args_correct": true,
         "actual_tool_calls": [],
-        "actual_text": "Tôi là một trợ lý nghiên cứu ảo, được thiết kế để hỗ trợ bạn trong việc tìm kiếm thông tin, tin tức, bài viết, và các tài liệu nghiên cứu. Tôi có thể giúp bạn:\n\n- Tìm kiếm tin tức mới nhất từ các nguồn trực tuyến.\n- Lấy thông tin từ mạng xã hội như Twitter.\n- Đọc và tóm tắt nội dung từ các trang web.\n- Tìm kiếm và trích xuất thông tin từ các bài báo khoa học.\n- Hỗ trợ trong việc tìm kiếm mã nguồn mở trên GitHub.\n\nNếu bạn có bất kỳ câu hỏi nào hoặc cần tìm kiếm thông tin cụ thể, hãy cho tôi biết!",
+        "actual_text": "Tôi là một trợ lý nghiên cứu ảo, được thiết kế để hỗ trợ bạn trong việc tìm kiếm thông tin, tin tức, bài viết, và các tài liệu nghiên cứu. Tôi có thể giúp bạn:\n\n- Tìm kiếm tin tức mới nhất từ các nguồn trên internet.\n- Lấy thông tin từ các mạng xã hội như Twitter.\n- Đọc và tóm tắt nội dung từ các bài viết hoặc trang web cụ thể.\n- Tìm kiếm và trích xuất thông tin từ các bài báo khoa học.\n- Hỗ trợ trong việc tìm kiếm mã nguồn mở trên GitHub và các thảo luận công nghệ trên Hacker News.\n\nNếu bạn có bất kỳ câu hỏi nào hoặc cần tìm kiếm thông tin cụ thể, hãy cho tôi biết!",
         "case_failure_type": "unnecessary_tool",
         "observed_mismatch": null,
         "failure_type": null,
@@ -570,7 +570,7 @@
           {
             "name": "clarify",
             "args": {
-              "question": "Bạn vui lòng cung cấp đường dẫn URL cụ thể của bài viết mà bạn muốn tóm tắt không?",
+              "question": "Bạn vui lòng cung cấp đường dẫn URL cụ thể của bài viết mà bạn muốn tóm tắt?",
               "response_type": "text"
             }
           }
@@ -585,12 +585,12 @@
         {
           "tool": "clarify",
           "args": {
-            "question": "Bạn vui lòng cung cấp đường dẫn URL cụ thể của bài viết mà bạn muốn tóm tắt không?",
+            "question": "Bạn vui lòng cung cấp đường dẫn URL cụ thể của bài viết mà bạn muốn tóm tắt?",
             "response_type": "text"
           },
           "result": {
             "tool": "ask_user",
-            "question": "Bạn vui lòng cung cấp đường dẫn URL cụ thể của bài viết mà bạn muốn tóm tắt không?",
+            "question": "Bạn vui lòng cung cấp đường dẫn URL cụ thể của bài viết mà bạn muốn tóm tắt?",
             "response_type": "text",
             "options": [],
             "awaiting_user": true
@@ -628,7 +628,7 @@
           {
             "name": "clarify",
             "args": {
-              "question": "Bạn có xác nhận muốn gửi bản tin này lên Telegram không?",
+              "question": "Bạn có chắc chắn muốn gửi bản tin này lên Telegram không?",
               "response_type": "yes_no"
             }
           }
@@ -643,12 +643,12 @@
         {
           "tool": "clarify",
           "args": {
-            "question": "Bạn có xác nhận muốn gửi bản tin này lên Telegram không?",
+            "question": "Bạn có chắc chắn muốn gửi bản tin này lên Telegram không?",
             "response_type": "yes_no"
           },
           "result": {
             "tool": "ask_user",
-            "question": "Bạn có xác nhận muốn gửi bản tin này lên Telegram không?",
+            "question": "Bạn có chắc chắn muốn gửi bản tin này lên Telegram không?",
             "response_type": "yes_no",
             "options": [],
             "awaiting_user": true
@@ -762,7 +762,7 @@
         "routing_correct": true,
         "args_correct": true,
         "actual_tool_calls": [],
-        "actual_text": "Xin lỗi, nhưng mình không thể giúp bạn với yêu cầu viết mã Python. Nếu bạn cần thông tin hoặc tài liệu về thuật toán Fibonacci, mình có thể hỗ trợ bạn tìm kiếm!",
+        "actual_text": "Xin lỗi, nhưng mình không thể giúp bạn với yêu cầu viết mã Python. Nếu bạn cần thông tin về dãy Fibonacci hoặc cách hoạt động của nó, mình có thể hỗ trợ!",
         "case_failure_type": "out_of_scope",
         "observed_mismatch": null,
         "failure_type": null,
