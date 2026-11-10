@@ -1,190 +1,210 @@
-# HƯỚNG DẪN LUỒNG LÀM VIỆC & PHỐI HỢP NHÓM 5 NGƯỜI — LAB DAY 03
+# CẨM NANG LUỒNG LÀM VIỆC & PHỐI HỢP NHÓM 5 NGƯỜI (ZERO-CONFLICT)
 
-> **Học phần:** Prompt, Function Calling & Tool Design (MCP) — Research Agent Tool Eval  
-> **Cấu hình đội hình:** 5 thành viên (4 Coder + 1 Thành viên Low-code)  
-> **Mục tiêu:** Hoàn thành 100% yêu cầu bắt buộc + Đạt **Điểm cộng (Bonus)** với **Streamlit UI** và **4 Tools mới (> 3 tools)**.
-
----
-
-## 1. BỐN QUY ĐỊNH BẮT BUỘC (TỪ SLIDE TIẾN ĐỘ LAB DAY 03)
-
-1. **Làm theo nhóm — Nộp bài CÁ NHÂN trên LMS:**
-   - Thảo luận, thiết kế, viết tool, test chéo và thuyết trình theo nhóm.
-   - **Mỗi cá nhân phải tự nộp link repo của chính mình** lên hệ thống `aithucchien.vinuni.edu.vn`.
-   - Trong repo phải có file `TEAM.md` ghi rõ tên nhóm và danh sách thành viên (Họ tên + MSSV + Vai trò).
-2. **Quy chuẩn đặt tên Repository:**
-   - **Repo cá nhân (dùng để nộp LMS):** `K5-L3-DAY03-HoVaTen-MSSV-ResearchAgentToolEval` (Ví dụ: `K5-L3-DAY03-PhamVietHung-2A202603370-ResearchAgentToolEval`).
-   - **Repo nhóm (nếu tạo chung):** `K5-L3-DAY03-TenNhom-ResearchAgentToolEval`.
-3. **Hạn nộp bài (Deadline):**
-   - **Ca sáng (09:00–13:00) & Ca chiều (14:00–18:00):** Hạn cuối nộp LMS là **23:59 cùng ngày**.
-   - **Ca tối (16:30–20:00):** Hạn cuối nộp LMS là **12:00 trưa hôm sau**.
-   - **Hạn cứng trên lớp:** Phần A của `starter_v0/artifacts/REPORT.md` và **link Demo (Cloudflare Tunnel)** phải sẵn sàng trước giờ **Team Showdown** (`11:35` ca sáng / `16:35` ca chiều).
-4. **Bảo mật & Điểm cộng (Bonus):**
-   - **TUYỆT ĐỐI KHÔNG** commit file `.env` hoặc API key lên GitHub.
-   - **Điều kiện Điểm cộng (Bonus):** Nhóm có **CẢ HAI**:
-     1. Giao diện UI hoạt động (`starter_v0/app.py`)
-     2. Viết **> 3 tools mới** (tức là tối thiểu **4 tools mới** ngoài 10 tools có sẵn).
+> **Chương trình:** VINUNI AI THỰC CHIẾN · COHORT 5 · DAY 03 LAB V2  
+> **Đề tài:** Prompt, Function Calling & Tool Design (MCP) — Research Agent Tool Eval  
+> **Cấu hình đội hình:** 5 thành viên (1 Low-code + 4 Coders)  
+> **Mục tiêu:** Đạt 100% yêu cầu bắt buộc + Trọn vẹn **Điểm Thưởng (Bonus Point)** (*Streamlit UI + 4 Tools mới + 0 failed/0 skipped pytest*) mà **KHÔNG BỊ XUNG ĐỘT CODE (0 Merge Conflict)**.
 
 ---
 
-## 2. KIẾN TRÚC & LUỒNG HOẠT ĐỘNG CỦA RESEARCH AGENT
+## 1. BỐN QUY ĐỊNH BẮT BUỘC PHẢI NHỚ (THEO SLIDE HƯỚNG DẪN)
 
-### 2.1. Sơ đồ luồng xử lý 1 câu hỏi của người dùng
+| Hạng mục | Quy định bắt buộc | Lưu ý quan trọng cho các thành viên |
+| :--- | :--- | :--- |
+| **1. Hình thức làm bài** | **BÀI NHÓM (5 thành viên)** | Làm chung 1 sản phẩm nhưng **MỖI HỌC VIÊN VẪN PHẢI TỰ NỘP REPO RIÊNG** lên LMS. Bắt buộc tạo file `TEAM.md` liệt kê đầy đủ thành viên. |
+| **2. Đặt tên Repo** | • **Cá nhân:** `K5-L3-DAY03-HoVaTen-MSSV-ResearchAgentToolEval`<br>• **Nhóm:** `K5-L3-DAY03-TenNhom-ResearchAgentToolEval` | Viết liền không dấu, nối bằng dấu gạch ngang (`-`). Ví dụ: `K5-L3-DAY03-PhamVietHung-2A202603370-ResearchAgentToolEval` |
+| **3. Hạn chót (Deadline)** | • **Ca sáng (9h–13h) & Ca chiều (14h–18h):** `23:59` hôm nay<br>• **Ca tối (16h30–20h):** `12:00` trưa mai | Riêng `REPORT.md` Phần A + Link Demo bắt buộc xong trước giờ **Team Showdown**. Nộp muộn trên LMS bị trừ điểm. |
+| **4. Bảo mật & Nộp bài** | Nộp link repo tại: https://aithucchien.vinuni.edu.vn | **TUYỆT ĐỐI KHÔNG** commit file `.env` và API keys lên GitHub. Chỉ cần 1 máy chính (TV2) có đủ API key để chạy eval. |
+
+---
+
+## 2. LUỒNG HOẠT ĐỘNG ĐƠN GIẢN CỦA RESEARCH AGENT & VÒNG LẶP ĐÁNH GIÁ
+
+Research Agent không tự bịa câu trả lời mà hoạt động theo quy trình điều phối công cụ (**Function Calling / Tool Routing**) gồm 3 bước:
 
 ```mermaid
 flowchart TD
-    U["Người dùng nhập câu hỏi (CLI chat.py / Streamlit app.py / run_eval.py)"] --> A["agent.py: Đọc artifacts/system_prompt.md + artifacts/tools.yaml"]
-    A --> B["Gửi câu hỏi + Danh sách 10+ Tools sang LLM (gpt-4o-mini)"]
-    B --> C{"LLM quyết định gọi Tool nào?"}
-    C -- "Câu hỏi mơ hồ" --> T1["Gọi clarify(question, options)"]
-    C -- "Cần tra cứu / tính toán" --> T2["Gọi lookup / papers / paper_text / social_search / policy / timeline / fetch / format..."]
-    C -- "Yêu cầu gửi tin ra ngoài" --> T3["Chặn lại! Trả về pending_confirmation (Chờ bấm Y/N)"]
-    T2 --> D["Tool trong starter_v0/tools/<tên_tool>/ thực thi"]
-    D --> E["Trả chuẩn dict: {status, data, source, ...} về cho LLM"]
-    E --> F{"Cần gọi thêm Tool bước tiếp theo? (Tối đa 5 vòng)"}
-    F -- "Có (Multi-step)" --> B
-    F -- "Đủ thông tin" --> G["LLM tổng hợp câu trả lời cuối cùng cho người dùng"]
+    U["User gửi câu hỏi (run_eval.py / chat.py / Streamlit app.py)"] --> A["Bước 1: Đọc artifacts/system_prompt.md + artifacts/tools.yaml"]
+    A --> B{"LLM quyết định hướng xử lý (Routing)"}
+    B -- "Ngoài phạm vi / Meta" --> R1["Trả lời trực tiếp / Từ chối (Không gọi tool)"]
+    B -- "Thiếu handle/URL hoặc cần xác nhận gửi Telegram" --> R2["Gọi tool clarify (awaiting_user=True) để hỏi lại User"]
+    B -- "Đủ thông tin tra cứu" --> R3["Chọn đúng 1 hoặc nhiều tool (timeline, social_search, lookup, fetch, policy, papers, paper_text, format...) + args chuẩn"]
+    R3 --> C["Bước 2: Thực thi hàm Python thật trong tools/__init__.py (TOOL_FUNCTIONS)"]
+    C --> D["Gọi API thật (Tavily, Firecrawl, RapidAPI Twitter45, arXiv, Telegram) hoặc dữ liệu local"]
+    D --> E["Bước 3: Trả kết quả JSON về cho LLM tổng hợp câu trả lời có trích dẫn nguồn"]
 ```
 
-### 2.2. Tại sao bản gốc `v0` bị điểm thấp và nhóm phải làm gì?
+- **Bước 1 — Đọc hướng dẫn & Chọn Tool (Routing):** LLM nhận câu hỏi của user, đối chiếu với luật trong `starter_v0/artifacts/system_prompt.md` và danh sách công cụ trong `starter_v0/artifacts/tools.yaml` để quyết định:
+  1. Trả lời trực tiếp / Từ chối nếu ngoài phạm vi;
+  2. Gọi tool `clarify` để hỏi lại user nếu thiếu URL/tài khoản hoặc cần xác nhận trước khi gửi Telegram;
+  3. Chọn đúng 1 hoặc nhiều tool tra cứu (`timeline`, `social_search`, `lookup`, `fetch`, `policy`, `papers`, `paper_text`, `format`...) kèm tham số (`args`) chuẩn xác.
+- **Bước 2 — Thực thi hàm Python thật (Tool Execution):** Hệ thống lấy tên tool và `args` từ LLM để gọi hàm Python tương ứng trong `starter_v0/tools/__init__.py` (`TOOL_FUNCTIONS`), kết nối API thật (Tavily, Firecrawl, RapidAPI Twitter45, arXiv, Telegram) hoặc đọc dữ liệu local.
+- **Bước 3 — Tổng hợp kết quả & Phản hồi (Multi-round Loop trong `chat.py` / `app.py`):** Kết quả JSON từ tool được gửi lại cho LLM để tổng hợp thành câu trả lời có trích dẫn nguồn, hoặc dừng chờ người dùng nếu tool trả về cờ `awaiting_user=True`.
 
-| Vấn đề trong `starter_v0` (Bản gốc `v0`) | Hậu quả khi chạy chấm điểm | Giải pháp nhóm cần thực hiện |
-| :--- | :--- | :--- |
-| `artifacts/system_prompt.md` chỉ có đúng 2 câu sơ sài | LLM không biết khi nào phải hỏi lại (`clarify`), khi nào phải tra cứu hay từ chối câu hỏi ngoài lề | **TV1** viết lại `system_prompt.md` có quy tắc phân luồng rõ ràng |
-| `artifacts/tools.yaml` có mô tả trùng lặp giữa `lookup`, `papers`, `social_search`, `fetch` | LLM chọn nhầm tool (ví dụ: dùng `lookup` để tìm bài báo học thuật thay vì `papers`) | **TV1** viết lại `description` trong `tools.yaml` theo cấu trúc: *Dùng khi nào / KHÔNG dùng khi nào* |
-| `tools/social_search/__init__.py` chỉ cắt từ khóa bằng `.split()` | Không tìm được bài thảo luận liên quan nếu khác từ vựng | **TV2** nâng cấp thuật toán chấm điểm từ khóa / đồng nghĩa / lọc `platform`, `min_upvotes` |
-| `tools/papers/__init__.py` chỉ đếm số từ trùng đơn giản | Xếp hạng sai bài báo quan trọng hoặc bỏ sót kết quả | **TV3** nâng cấp thuật toán chấm điểm (`title` weight cao hơn `abstract`, khớp cụm từ) |
-| Chưa có UI, chưa đủ > 3 tools mới, `eval_group.json` & `REPORT.md` còn trống | Chưa đủ điều kiện nộp bài và chưa đạt Điểm cộng | **TV2 + TV3** viết 4 tools mới; **TV4** làm Streamlit UI; **TV5** viết `eval_group.json` & `REPORT.md` |
+### Sự khác biệt giữa 3 chế độ chạy trong Project:
+- **`run_eval.py` (Đo Model):** Chạy 1 lượt (one-shot) qua `agent.py` để chấm điểm xem LLM có chọn đúng tool và truyền đúng `args` như đáp án trong `data/eval_base.json` hay không. Xuất bằng chứng ra `runs/*.json`.
+- **`pytest` (Đo Code của Tool):** Chạy hoàn toàn offline (mock mạng bằng `fake_http`) để kiểm tra xem code Python của các tool trong thư mục `tools/` có đúng hợp đồng (`test_tool_contract.py`) và xử lý đúng dữ liệu/lỗi hay không (`test_tools_todo.py`, `test_new_tools.py`).
+- **`chat.py` & `app.py` (Chạy Tương tác Live):** Chạy hội thoại nhiều vòng thực tế với người dùng và tự động lưu toàn bộ lịch sử vào `transcripts/*.transcript.json`.
 
 ---
 
-## 3. PHÂN CÔNG CHI TIẾT CHO 5 THÀNH VIÊN (4 CODER + 1 LOW-CODE)
+## 3. PHÂN CÔNG NHIỆM VỤ CHI TIẾT CHO 5 THÀNH VIÊN (1 LOW-CODE + 4 CODERS)
 
-> **Nguyên tắc vàng chống xung đột Git (Zero Merge Conflict):** Mỗi thành viên làm việc trên một nhóm file độc lập. Không ai sửa chồng lên file của người khác.
+**Mục tiêu của nhóm:** Đạt 100% yêu cầu bắt buộc VÀ lấy trọn **Điểm Thưởng (Bonus Point)** bằng cách:
+1. Có giao diện Web UI Streamlit (`starter_v0/app.py`)
+2. Tự viết thêm **4 tools mới** (`> 3 tools`)
+3. Xanh 100% `pytest` (`0 failed, 0 skipped`)
+4. Có xác nhận an toàn trước khi gửi Telegram (`clarify` -> `send`).
 
-| Thành viên | Vai trò (Role) | File phụ trách chính (Độc quyền sửa) | Nhiệm vụ cốt lõi |
-| :--- | :--- | :--- | :--- |
-| **TV1 (Coder 1)** | **Prompt & Eval Lead** *(Nhóm trưởng kỹ thuật)* | `starter_v0/artifacts/system_prompt.md`<br>`starter_v0/artifacts/tools.yaml`<br>`starter_v0/artifacts/version_log.csv` | • Quản lý file `.env` và nhánh Git `main`.<br>• Chạy `run_eval.py` qua 4 mốc `v0 -> v1 -> v2 -> v3`.<br>• Tối ưu `system_prompt.md` và `tools.yaml` để kéo điểm `eval_base.json` từ ~35% lên >80%. |
-| **TV2 (Coder 2)** | **Tool Engineer #1** *(Social & 2 Tools mới)* | `starter_v0/tools/social_search/__init__.py`<br>`starter_v0/tools/arxiv_search/` *(Mới)*<br>`starter_v0/tools/cite_validator/` *(Mới)* | • Cải tiến thuật toán tìm kiếm trong `social_search`.<br>• Viết **2 tool mới** (`arxiv_search`, `cite_validator`) kèm file `TOOL.md` đúng chuẩn contract (`status`, `data`, `source`). |
-| **TV3 (Coder 3)** | **Tool Engineer #2 & Unit Test Lead** | `starter_v0/tools/papers/__init__.py`<br>`starter_v0/tools/acronym_expander/` *(Mới)*<br>`starter_v0/tools/reading_list/` *(Mới)*<br>`starter_v0/tests/test_tools_todo.py` | • Cải tiến thuật toán xếp hạng bài báo trong `papers`.<br>• Viết **2 tool mới** (`acronym_expander`, `reading_list`) kèm `TOOL.md` (cùng TV2凑 đủ **4 tools mới** để ăn Bonus).<br>• Viết đầy đủ các hàm unit test trong `tests/test_tools_todo.py`. |
-| **TV4 (Coder 4)** | **UI & Integration Lead** *(Streamlit + Tunnel + Demo)* | `starter_v0/app.py` *(Mới)*<br>`starter_v0/artifacts/poster.html` *(Mới)*<br>`starter_v0/artifacts/chat_transcript.json` | • Xây dựng giao diện web `starter_v0/app.py` bằng Streamlit (có khung chat, hiển thị `tool_calls` trace, nút **Confirm / Cancel** khi gọi `send` qua Telegram).<br>• Mở public link bằng `cloudflared tunnel`.<br>• Chạy `chat.py` tối thiểu 3 lượt để xuất `chat_transcript.json`. |
-| **TV5 (Low-code)** | **QA, Dataset & Report Lead** *(Kiểm thử & Báo cáo)* | `starter_v0/data/eval_group.json`<br>`starter_v0/artifacts/REPORT.md`<br>`TEAM.md` *(Mới)* | • Không cần code Python! Làm việc hoàn toàn trên Markdown và JSON.<br>• Thiết kế **10 test cases** trong `data/eval_group.json` (5 câu 1-tool + 5 câu multi-tool/clarify/edge case).<br>• Viết `REPORT.md` (Phần A trước Showdown, Phần B sau Showdown) và `TEAM.md`.<br>• Cầm kịch bản đi test chéo nhóm bạn trong giờ **Team Showdown**. |
+| Thành viên | Vai trò chuyên trách | Mức độ Code | File phụ trách độc lập (Độc quyền sửa) | Sản phẩm bàn giao (Deliverables) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Thành viên 1**<br>*(Low-code)* | **Eval Designer, Live Chat Tester & Report/Poster Lead** | Không cần code Python (Sửa JSON, Markdown, HTML/CSV) | `starter_v0/data/eval_group.json`<br>`starter_v0/artifacts/REPORT.md`<br>`starter_v0/artifacts/poster.html`<br>`TEAM.md` | 1. 10 câu eval mới (5 single + 5 multi-turn)<br>2. `REPORT.md` Phần A & Poster trước Showdown<br>3. Chạy chat live ≥ 3 lượt<br>4. Tổng hợp bảng số liệu `REPORT.md` Phần B |
+| **Thành viên 2**<br>*(Coder / Lead)* | **Prompt & Tool Schema Optimizer + Eval Runner** | Vừa (Prompt Engineering + Chạy lệnh Eval CLI) | `starter_v0/.env`<br>`starter_v0/artifacts/system_prompt.md`<br>`starter_v0/artifacts/tools.yaml`<br>`starter_v0/artifacts/version_log.csv`<br>`starter_v0/runs/*.json` | 1. Thiết lập `.env` & chạy Baseline `v0`<br>2. Tối ưu 3 vòng `v1 -> v2 -> v3` (mỗi vòng 1 giả thuyết)<br>3. Ghi đầy đủ `version_log.csv`<br>4. Quản lý merge file `tools.yaml` |
+| **Thành viên 3**<br>*(Coder)* | **New Tools Developer (Săn Bonus > 3 Tools mới)** | Khá (Python + Xử lý API / Local Data) | `starter_v0/tools/<4_tool_mới>/tool.py`<br>`starter_v0/tools/<4_tool_mới>/TOOL.md`<br>`starter_v0/tools/new_tools_schema.yaml`<br>`starter_v0/tools/__init__.py`<br>`starter_v0/tests/test_new_tools.py` | 1. Viết 4 tools mới hoàn chỉnh kèm `TOOL.md`<br>2. Đăng ký vào `tools/__init__.py` & `new_tools_schema.yaml`<br>3. Viết ≥ 3 unit tests/tool mới trong `tests/test_new_tools.py` (tổng 12 tests) |
+| **Thành viên 4**<br>*(Coder)* | **QA & Unit Test Engineer (+ Local Model Ollama)** | Khá (Pytest, Mocking `fake_http`, Debug) | `starter_v0/tests/test_tools_todo.py`<br>Sửa bug biên trong `starter_v0/tools/<10_tool_gốc>/tool.py` | 1. Điền hết 12 test stubs trong `test_tools_todo.py`<br>2. Tìm & sửa bug biên trong tool gốc để ghi vào mục B5<br>3. Giữ `pytest` đạt `0 failed, 0 skipped`<br>4. *(Tuỳ chọn)* Chạy Ollama local model |
+| **Thành viên 5**<br>*(Coder)* | **UI & Deployment Engineer (Streamlit + Tunnel)** | Khá (Streamlit UI + Tích hợp `chat.py`) | `starter_v0/app.py`<br>`starter_v0/transcripts/*.transcript.json` | 1. Xây dựng giao diện Streamlit (`app.py`) đẹp, hiện rõ `tool_calls` & nút xác nhận `send`<br>2. Mở link public bằng `cloudflared tunnel` cho buổi Showdown |
+
+### 3.1. Chi tiết công việc của Thành viên 1 (Bạn Low-code)
+- **Nhiệm vụ 1 (Thiết kế 10 câu Eval nhóm vào `data/eval_group.json`):** Mở file `data/eval_base.json` để xem mẫu, sau đó viết 10 case mới vào `data/eval_group.json` (tất cả đều có `"phase": "B"`), gồm **5 câu đơn (`query`)** và **5 câu hội thoại nhiều lượt (`turns`)**. Đảm bảo bao phủ các `failure_type`: `wrong_tool`, `wrong_arg_value`, `wrong_boundary`, `unnecessary_tool`, `out_of_scope`, `missing_info`, và có ít nhất 1–2 câu gọi tới các tool mới của Thành viên 3.
+- **Nhiệm vụ 2 (Hoàn thiện `REPORT.md` Phần A & Poster trước giờ Showdown):** Viết ngắn gọn mục **A1** (Agent làm được gì), **A2** (Bảng danh sách tất cả các tool kèm mô tả), **A3** (5 câu hỏi mẫu để nhóm khác bấm thử ngay), và dán link Cloudflare Tunnel từ Thành viên 5 vào.
+- **Nhiệm vụ 3 (Tương tác Live Chat & Tổng hợp `REPORT.md` Phần B):** Sau khi có `v3`, thực hiện chat ít nhất 3 kịch bản (tra cứu tin tức, hỏi câu thiếu thông tin để agent hỏi lại, yêu cầu gửi bản tin lên Telegram và xác nhận) để tạo file transcript. Cuối buổi thu thập số liệu từ Thành viên 2, 3, 4 để điền đầy đủ các mục **B1, B2, B3, B4, B5, B6** vào `REPORT.md` và lập file `TEAM.md`.
+
+### 3.2. Chi tiết công việc của Thành viên 2 (Team Lead / Prompt & Eval)
+- **Nhiệm vụ 1 (Setup API Keys & Chạy Baseline `v0`):** Tạo file `starter_v0/.env` với đủ 4 keys bắt buộc (`OPENROUTER_API_KEY`, `TAVILY_API_KEY`, `FIRECRAWL_API_KEY`, `RAPIDAPI_KEY`) và `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`. Chạy `preflight_provider.py` và chạy `run_eval.py` cho bản `v0` nguyên gốc. Ghi dòng `v0` vào `artifacts/version_log.csv`.
+- **Nhiệm vụ 2 (Tối ưu tuần tự 3 phiên bản `v1 -> v2 -> v3`, mỗi bản 1 giả thuyết):**
+  - **Bản `v1` (Giả thuyết về System Prompt):** Sửa `artifacts/system_prompt.md` — xoá bỏ chỉ dẫn đoán mò và tự ý gửi bài của starter; thêm quy tắc bắt buộc gọi `clarify(response_type='text')` khi thiếu handle/URL, gọi `clarify(response_type='yes_no')` trước khi gọi `send`, từ chối câu hỏi ngoài phạm vi/meta (không gọi tool), và cho phép gọi song song nhiều tool khi câu hỏi yêu cầu 2 nguồn.
+  - **Bản `v2` (Giả thuyết về Tool Routing trong `tools.yaml`):** Sửa `artifacts/tools.yaml` — viết lại `description` chi tiết cho từng tool: làm gì, **KHI NÀO DÙNG** và **KHI NÀO KHÔNG DÙNG** (phân biệt rõ `timeline` vs `social_search` vs `lookup` vs `fetch` vs `policy` vs `papers` vs `paper_text`). Đồng thời ghép thêm 4 tools mới từ file `tools/new_tools_schema.yaml` của Thành viên 3 vào cuối `tools.yaml`.
+  - **Bản `v3` (Giả thuyết về Quy ước Tham số & Multi-turn):** Bổ sung quy tắc chuẩn hoá tham số vào prompt & parameter descriptions: ánh xạ tên người nổi tiếng sang handle không có `@` (`Sam Altman -> sama`, `Elon Musk -> elonmusk`, `Andrej Karpathy -> karpathy`); dùng `topic='news'` cho tin tức; `timeframe='day'` cho hôm nay, `'week'` cho tuần này; `search_type='Top'` cho tweet phổ biến; kế thừa hoặc cập nhật tham số qua các lượt hội thoại multi-turn.
+
+### 3.3. Chi tiết công việc của Thành viên 3 (Phát triển 4 Tools Mới)
+- **Mục tiêu điểm thưởng:** Viết thêm **4 tools mới** (vượt mốc `> 3 tools mới` theo yêu cầu Bonus) đặt trong `starter_v0/tools/<ten_tool>/` gồm file `tool.py` và `TOOL.md` đúng chuẩn frontmatter.
+- **Gợi ý 4 Tools mới dễ viết, chạy ổn định, không cần API key trả phí:**
+  1. `github_search`: Tìm kiếm repository mã nguồn mở trên GitHub REST API;
+  2. `hackernews`: Tìm thảo luận công nghệ trên HackerNews Algolia API;
+  3. `wikipedia`: Tra cứu tóm tắt khái niệm trên Wikipedia REST API;
+  4. `save_note`: Lưu bản tin markdown ra file cục bộ (action tool có cờ `confirmed=True`).
+- **Yêu cầu kiểm thử & Chống xung đột:**
+  - Viết schema YAML của 4 tools mới vào file riêng `starter_v0/tools/new_tools_schema.yaml` để Thành viên 2 ghép vào cuối `artifacts/tools.yaml` ở Mốc 4.
+  - Viết ít nhất 3 unit tests/tool (happy path, bad input, error dict) vào file riêng `starter_v0/tests/test_new_tools.py` (không sửa vào `test_tools_todo.py` của Thành viên 4).
+
+### 3.4. Chi tiết công việc của Thành viên 4 (Unit Tests & Săn Bug Tool có sẵn)
+- **Nhiệm vụ 1 (Hoàn thành 12 test stubs trong `tests/test_tools_todo.py`):** Dựa vào mẫu trong `tests/test_tools_examples.py`, dùng fixture `fake_http` và `monkeypatch.setenv` để viết toàn bộ 12 hàm test đang để `pytest.skip(TODO)` cho các tool: `clarify`, `format`, `send`, `lookup`, `fetch`, `timeline`, `social_search`, `policy`.
+- **Nhiệm vụ 2 (Challenge+ — Phát hiện và sửa bug biên trong tool có sẵn cho mục B5 Report):** Kiểm tra và sửa các lỗi biên trong code gốc như: truyền `limit=0` hoặc `top_k=0` bị biến thành `5` hoặc `3` do biểu thức `int(limit or 5)`; hoặc truyền `screenname='@sama'` có dấu `@` ở đầu. Giữ lại regression test và báo cáo kết quả cho Thành viên 1 ghi vào mục **B5**.
+
+### 3.5. Chi tiết công việc của Thành viên 5 (Streamlit UI & Cloudflare Tunnel)
+- **Nhiệm vụ 1 (Xây dựng `starter_v0/app.py` bằng Streamlit):** Tái sử dụng hàm `run_model_tool_loop` và `write_transcript` từ `chat.py` để tạo giao diện chat trực quan: có Sidebar chọn Provider/Model, hiển thị mã băm `artifact_version`, danh sách tất cả các tool, các nút Câu hỏi mẫu (Quick Prompts), khung hiển thị chi tiết từng bước gọi tool (`args` & JSON trả về) và nút bấm xác nhận khi Agent hỏi `clarify` (Yes/No).
+- **Nhiệm vụ 2 (Mở Public Link qua Cloudflare Tunnel):** Chạy `streamlit run app.py` ở cổng `8501` và chạy lệnh `cloudflared tunnel --url http://localhost:8501` để lấy link `https://<random>.trycloudflare.com` gửi cho Thành viên 1 dán vào `REPORT.md` Phần A trước giờ Showdown.
 
 ---
 
 ## 4. LỊCH TRÌNH PHỐI HỢP THEO 7 MỐC THỜI GIAN TRÊN LỚP
 
-### Mốc 1: Setup & Khởi động (`09:15–09:35` Ca sáng | `14:15–14:35` Ca chiều — *20 phút*)
-- **TV1:** Tạo file `starter_v0/.env` từ `.env.example`, điền `OPENAI_API_KEY`, chạy lệnh kiểm tra:
+Bảng dưới đây quy chiếu chính xác theo 7 mốc trên Slide tiến độ lớp học (áp dụng cho Ca sáng `09:00–13:00` và Ca chiều `14:00–18:00`, sau 15 phút đầu ổn định lớp):
+
+| Mốc | Ca Sáng / Ca Chiều | Tên Mốc & Mục tiêu | Hoạt động phối hợp giữa 5 thành viên | Tiêu chí hoàn thành (Done) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Mốc 1**<br>*(20p)* | `09:15 – 09:35`<br>`14:15 – 14:35` | **Khởi động & Setup**<br>*(Chạy được API thật)* | • **TV2:** Tạo venv, cài requirements, điền `.env`, chạy `preflight_provider.py`<br>• **TV1, TV3, TV4, TV5:** Clone repo nhóm, nhận phân công | • Preflight openrouter PASS<br>• `pytest`: contract + example xanh |
+| **Mốc 2**<br>*(35p)* | `09:35 – 10:10`<br>`14:35 – 15:10` | **Baseline `v0` + Dựng UI**<br>*(Có điểm `v0` & biết lỗi)* | • **TV2:** Chạy eval `v0` trên `eval_base.json`, ghi dòng `v0` vào `version_log.csv`<br>• **TV1:** Cùng TV2 đọc file `runs/v0_*.json` để phân loại lỗi<br>• **TV5:** Code xong khung Streamlit `app.py`<br>• **TV3:** Code 2/4 tools mới<br>• **TV4:** Viết 6/12 unit tests | • Có file `runs/v0_*.json`<br>• `version_log.csv` có dòng `v0`<br>• UI mở được ở `localhost:8501` |
+| **Mốc 3**<br>*(30p)* | `10:10 – 10:40`<br>`15:10 – 15:40` | **Tối ưu `v1` + Tool mới**<br>*(Sửa 1 thứ, đo lại)* | • **TV2:** Sửa `system_prompt.md` (xoá chỉ dẫn xấu + thêm luật `clarify`/`send`/`no_tool`), chạy eval `v1`, ghi `version_log.csv`<br>• **TV3:** Hoàn thành đủ 4 tools mới + `TOOL.md` + `new_tools_schema.yaml`<br>• **TV1:** Soạn xong 5 câu single-turn trong `eval_group.json` | • `version_log.csv` có dòng `v1`<br>• 4 Tools mới hoàn thiện code & `TOOL.md` |
+| **Mốc 4**<br>*(30p)* | `10:40 – 11:10`<br>`15:40 – 16:10` | **Team Eval + `v2` + Unit Test**<br>*(Tự đo lỗi nhóm quan tâm)* | • **TV2 + TV3:** Ghép 4 tools mới vào `tools/__init__.py` và `tools.yaml`, chạy `v2` trên base & group<br>• **TV1:** Hoàn thành đủ 10 cases trong `eval_group.json` (5 single + 5 multi)<br>• **TV3 + TV4:** Chạy `pytest` cho cả `test_tools_todo.py` và `test_new_tools.py` | • `eval_group.json` có ≥ 10 cases<br>• `version_log.csv` có `v2`<br>• `pytest`: `0 failed, 0 skipped` |
+| **Mốc 5**<br>*(25p)*<br>**DEADLINE** | `11:10 – 11:35`<br>`16:10 – 16:35` | **REPORT Phần A + Mở Link Demo**<br>*(Xong trước Showdown)* | • **TV5:** Chạy `streamlit run app.py` + `cloudflared tunnel`, gửi URL public cho TV1<br>• **TV1:** Hoàn tất `REPORT.md` Phần A (A1, A2, A3 + URL) và `artifacts/poster.html` | • REPORT Phần A đủ A1–A3<br>• Link `trycloudflare.com` mở được từ máy khác |
+| **Mốc 6**<br>*(55p)* | `11:35 – 12:30`<br>`16:35 – 17:30` | **Team Showdown**<br>*(Demo & Thử chéo)* | • **Cả nhóm:** Demo sản phẩm bằng Poster & Web UI<br>• **TV1 + TV2:** Ghi chép lại các câu hỏi của nhóm khác làm agent sai để đưa vào cải tiến `v3`<br>• **TV5:** Giữ terminal streamlit và cloudflared chạy xuyên suốt | • Đã demo thành công<br>• Có danh sách lỗi thực tế để tối ưu `v3` |
+| **Mốc 7**<br>*(30p)* | `12:30 – 13:00`<br>`17:30 – 18:00`<br>*(Nộp trước 23:59)* | **Chốt `v3` + REPORT Phần B + Nộp LMS** | • **TV2:** Tinh chỉnh bản `v3` cuối cùng, chạy eval `v3` trên base, group, extension<br>• **TV1:** Chạy `chat.py` ≥ 3 lượt live lấy transcript, hoàn thiện toàn bộ Phần B (B1–B6) và tạo `TEAM.md`<br>• **Cả 5 thành viên:** Đồng bộ code về repo cá nhân (xoá `.env`) và nộp link lên LMS | • Đủ `v0–v3` trong `version_log`<br>• Có `transcripts/*.transcript.json`<br>• Đã nộp LMS & Quét QR điểm danh cuối buổi |
+
+---
+
+## 5. BỘ QUY TẮC CHỐNG XUNG ĐỘT CODE TUYỆT ĐỐI (ZERO MERGE CONFLICT RULES)
+
+Để 5 người cùng làm việc trong 3.5 giờ mà **không xảy ra bất kỳ xung đột Git (Merge Conflict) hay làm hỏng bài chấm tự động nào**, cả nhóm bắt buộc tuân thủ **6 Quy tắc Vàng** sau:
+
+### Quy tắc 1 — Luật "1 File = 1 Owner" (Ranh giới File tuyệt đối)
+Không ai được sửa vào file thuộc quyền sở hữu của người khác:
+- **TV1** chỉ chạm vào: `TEAM.md`, `starter_v0/data/eval_group.json`, `starter_v0/artifacts/REPORT.md`, `starter_v0/artifacts/poster.html`.
+- **TV2** chỉ chạm vào: `starter_v0/artifacts/system_prompt.md`, `starter_v0/artifacts/tools.yaml`, `starter_v0/artifacts/version_log.csv`, `starter_v0/runs/`.
+- **TV3** chỉ chạm vào: `starter_v0/tools/<4_tool_mới>/`, `starter_v0/tools/new_tools_schema.yaml`, `starter_v0/tools/__init__.py`, `starter_v0/tests/test_new_tools.py`.
+- **TV4** chỉ chạm vào: `starter_v0/tests/test_tools_todo.py` và sửa lỗi biên nhỏ trong `starter_v0/tools/<10_tool_gốc>/tool.py`.
+- **TV5** chỉ chạm vào: `starter_v0/app.py` và `starter_v0/transcripts/`.
+
+### Quy tắc 2 — Cách ly 2 "Điểm Nóng" (`tools.yaml` và `tests/`)
+1. **Cách ly `artifacts/tools.yaml` (Giữa TV2 và TV3):**
+   - **TV3 KHÔNG sửa trực tiếp vào `artifacts/tools.yaml`** khi đang viết 4 tools mới (vì lúc đó TV2 đang sửa `tools.yaml` cho bản `v1`/`v2`).
+   - Thay vào đó, TV3 viết phần khai báo YAML của 4 tools mới vào file trung gian `starter_v0/tools/new_tools_schema.yaml`.
+   - Đúng **đầu Mốc 4 (`10:40` / `15:40`)**, **TV2** (chủ sở hữu `tools.yaml`) sẽ copy nội dung từ `new_tools_schema.yaml` dán nối tiếp vào **cuối file** `artifacts/tools.yaml`.
+2. **Cách ly file Unit Test (Giữa TV3 và TV4):**
+   - **TV4** làm việc độc quyền trên `starter_v0/tests/test_tools_todo.py` (12 test stubs cho các tool gốc).
+   - **TV3** tạo một file hoàn toàn mới tên là `starter_v0/tests/test_new_tools.py` để viết 12 unit tests cho 4 tools mới.
+   - Khi chạy lệnh `pytest`, hệ thống tự động gom cả 2 file test lại chạy chung mà TV3 và TV4 không bao giờ đụng code của nhau!
+
+### Quy tắc 3 — Chốt chặn đồng bộ `test_tool_contract.py` ở đầu Mốc 4
+File `tests/test_tool_contract.py` kiểm tra `set(TOOL_FUNCTIONS.keys()) == set(tools.yaml names)`. Do đó:
+- Trước Mốc 4 (trong lúc TV2 đang chạy `v0` và `v1`), **TV3 chưa push thay đổi trong `tools/__init__.py` lên `main`** (chỉ giữ ở máy local hoặc nhánh `feat/new-tools`).
+- Đúng đầu **Mốc 4**, khi TV3 đã viết xong cả 4 tools mới, TV2 và TV3 ghép đồng thời `tools/__init__.py` + `artifacts/tools.yaml` trong **cùng 1 lần commit** và chạy kiểm tra ngay:
   ```bash
   cd starter_v0
-  python run_eval.py --preflight
-  pytest
+  pytest tests/test_tool_contract.py -v
   ```
-- **TV2 & TV3:** Đọc kỹ `starter_v0/tools/README.md` và `starter_v0/tests/test_tool_contract.py` để nắm rõ quy ước: mọi tool đều nhận `**kwargs` và trả về `dict` có chứa `status`, `data`, `source`.
-- **TV4:** Cài đặt `streamlit` (`pip install streamlit`) và kiểm tra `cloudflared --version`.
-- **TV5:** Tạo file `TEAM.md` ở thư mục gốc liệt kê đầy đủ 5 thành viên (Họ tên, MSSV, Vai trò, Link GitHub).
 
----
+### Quy tắc 4 — Tuyệt đối KHÔNG tự ý đổi tên 10 tools gốc
+Giữ nguyên chính xác 10 cái tên: `clarify`, `timeline`, `social_search`, `lookup`, `fetch`, `format`, `send`, `policy`, `papers`, `paper_text`. Nếu đổi tên bất kỳ tool gốc nào mà quên sửa đồng bộ trong `eval_base.json` và `eval_research_extension.json` thì toàn bộ bài chấm tự động sẽ bị tính **FAIL**.
 
-### Mốc 2: Chạy Baseline `v0` & Dựng khung UI (`09:35–10:10` | `14:35–15:10` — *35 phút*)
-- **TV1:** Chạy điểm chuẩn ban đầu `v0` và tuyệt đối không sửa kết quả `v0`:
-  ```bash
-  python run_eval.py --tag v0 --notes "baseline"
-  ```
-  Sau đó mở kết quả xem những câu `cb_01..cb_20` nào bị trượt (`FAIL`) và báo cho nhóm.
-- **TV2:** Bắt đầu nâng cấp `tools/social_search/__init__.py` và khởi tạo thư mục `tools/arxiv_search/`.
-- **TV3:** Bắt đầu nâng cấp `tools/papers/__init__.py` và khởi tạo thư mục `tools/acronym_expander/`.
-- **TV4:** Viết `starter_v0/app.py` (Streamlit UI) kết nối trực tiếp với hàm `run_turn()` và `execute_confirmed_send()` trong `agent.py`.
-- **TV5:** Soạn 5 câu đầu tiên (`cg_01` đến `cg_05` — nhóm 1-tool) vào `starter_v0/data/eval_group.json`, ghi lại bảng điểm `v0` vào mục **A1** của `artifacts/REPORT.md`.
+### Quy tắc 5 — Cấm dùng `git add .` / Chỉ `git add` đúng file của mình
+Trước mỗi lần commit và push, mỗi thành viên phải tuân theo đúng 3 bước lệnh dưới đây để không bao giờ đẩy nhầm `.env`, `__pycache__` hoặc đè lên file của đồng đội:
 
----
-
-### Mốc 3: Tối ưu `v1` & Viết Tools Mới (`10:10–10:40` | `15:10–15:40` — *30 phút*)
-- **TV1:** Sửa **1 biến số duy nhất** (ví dụ: viết lại `artifacts/tools.yaml` để phân biệt rõ 10 tools + sửa `system_prompt.md`), sau đó chạy `v1`:
-  ```bash
-  python run_eval.py --tag v1 --notes "rewrite tool descriptions and system prompt"
-  ```
-- **TV2:** Hoàn thành 2 tools mới (`arxiv_search`, `cite_validator`) kèm `TOOL.md` và chạy `pytest tests/test_tool_contract.py`.
-- **TV3:** Hoàn thành 2 tools mới (`acronym_expander`, `reading_list`) kèm `TOOL.md` và chạy `pytest tests/test_tool_contract.py`.
-- **TV4:** Hoàn thiện giao diện xác nhận gửi tin Telegram (`pending_confirmation`) trên `app.py` và test gửi thử tin nhắn.
-- **TV5:** Hoàn thành 5 câu tiếp theo (`cg_06` đến `cg_10` — nhóm multi-step, clarify, hoặc gọi 4 tools mới của TV2/TV3) trong `data/eval_group.json`.
-
----
-
-### Mốc 4: Ghép bộ Eval Nhóm + Chạy `v2` + Unit Tests (`10:40–11:10` | `15:40–16:10` — *30 phút*)
-- **TV2 & TV3:** Push code 4 tools mới và phần nâng cấp `papers`, `social_search` lên repo. **TV3** hoàn thiện `tests/test_tools_todo.py` và chạy `pytest` xanh 100%.
-- **TV1:** Pull code của TV2, TV3, TV5 về. Khai báo thêm 4 tools mới vào `artifacts/tools.yaml`. Chạy chấm điểm bản `v2` trên cả bộ đề gốc lẫn bộ đề nhóm:
-  ```bash
-  python run_eval.py --tag v2 --notes "improved social_search, papers and added 4 new tools"
-  python run_eval.py --eval-file data/eval_group.json --tag v2_group --notes "group eval 10 cases"
-  ```
-- **TV4:** Tạo trang `starter_v0/artifacts/poster.html` tóm tắt kiến trúc và bảng điểm tăng trưởng từ `v0 -> v1 -> v2`.
-- **TV5:** Cập nhật kết quả `v1`, `v2` và mô tả các tools mới vào mục **A1, A2, A3** trong `artifacts/REPORT.md`.
-
----
-
-### Mốc 5: Chốt `REPORT.md` Phần A + Mở Link Demo (`11:10–11:35` | `16:10–16:35` — *25 phút - HẠN CỨNG*)
-- **TV4:** Chạy Streamlit và mở cổng Cloudflare Tunnel:
-  ```bash
-  # Terminal 1:
-  streamlit run app.py
-  # Terminal 2:
-  cloudflared tunnel --url http://localhost:8501
-  ```
-  Copy đường link `https://xxxx.trycloudflare.com` gửi cho cả nhóm và giảng viên.
-- **TV5:** Rà soát lần cuối toàn bộ **Phần A (A1, A2, A3)** của `artifacts/REPORT.md` và push lên GitHub trước giờ Showdown.
-- **TV1, TV2, TV3:** Kiểm tra thử link `trycloudflare.com` trên điện thoại/máy tính khác để đảm bảo hoạt động mượt mà.
-
----
-
-### Mốc 6: Team Showdown — Đấu trường Test chéo (`11:35–12:30` | `16:35–17:30` — *55 phút*)
-- **TV4 & TV1:** Trình bày Demo 3 phút trước lớp (show giao diện `app.py`, gọi thử các tool mới, demo tính năng chặn xác nhận trước khi gửi Telegram bằng tool `send`).
-- **TV5:** Dùng bộ câu hỏi khó truy cập vào link `trycloudflare.com` của nhóm đối thủ để test chéo, ghi lại các tình huống đối thủ làm tốt hoặc bị lỗi.
-- **TV2 & TV3:** Quan sát log trên máy TV4 khi nhóm bạn vào test chatbot của nhóm mình; ghi chú ngay các câu khiến chatbot chọn sai tool hoặc trả lời lỗi để sửa cho bản `v3`.
-
----
-
-### Mốc 7: Chạy `v3` + Hoàn tất `REPORT.md` Phần B + Nộp LMS (`12:30–13:00` | `17:30–18:00` — *30 phút*)
-- **TV1, TV2, TV3:** Tinh chỉnh lại `system_prompt.md`, `tools.yaml` hoặc logic tool để vá các lỗi phát hiện trong lúc Showdown, sau đó chạy lượt đánh giá cuối cùng `v3`:
-  ```bash
-  python run_eval.py --tag v3 --notes "post-showdown fixes"
-  ```
-- **TV4:** Chạy `python chat.py` và trò chuyện trực tiếp ít nhất **3 lượt (3 turns)** có kích hoạt tool call (và xác nhận `send`) để sinh file `starter_v0/artifacts/chat_transcript.json`.
-- **TV5:** Điền hoàn chỉnh **Phần B (B1, B2, B3)** trong `starter_v0/artifacts/REPORT.md` (ghi lại những lỗi phát hiện ở Showdown và kết quả `v3`).
-- **TẤT CẢ 5 THÀNH VIÊN:** Đồng bộ code hoàn chỉnh về **repo cá nhân của từng người**, kiểm tra `git status` đảm bảo không dính `.env`, push lên GitHub cá nhân và nộp link trên `aithucchien.vinuni.edu.vn`.
-
----
-
-## 5. QUY TRÌNH GIT PHỐI HỢP & ĐỒNG BỘ REPO CÁ NHÂN
-
-### 5.1. Khi làm việc chung trong buổi Lab
-Mỗi thành viên chỉ `git add` đúng các file mình phụ trách:
 ```bash
-# Ví dụ TV2 chỉ add các file của TV2:
+# Bước 1: Chỉ add đúng các file thuộc quyền sở hữu của mình
+# • Nếu là TV1 (Low-code):
+git add TEAM.md starter_v0/data/eval_group.json starter_v0/artifacts/REPORT.md starter_v0/artifacts/poster.html
+
+# • Nếu là TV2 (Lead / Prompt & Eval):
+git add starter_v0/artifacts/system_prompt.md starter_v0/artifacts/tools.yaml starter_v0/artifacts/version_log.csv starter_v0/runs/
+
+# • Nếu là TV3 (4 Tools mới):
+git add starter_v0/tools/ starter_v0/tests/test_new_tools.py
+
+# • Nếu là TV4 (Unit Tests):
+git add starter_v0/tests/test_tools_todo.py starter_v0/tools/
+
+# • Nếu là TV5 (Streamlit UI):
+git add starter_v0/app.py starter_v0/transcripts/
+
+# Bước 2: Commit kèm tên vai trò
+git commit -m "feat(tvX): mo ta ngan gon phan viec"
+
+# Bước 3: Luôn pull --rebase trước khi push để không tạo merge commit lỗi
 git pull --rebase origin main
-git add starter_v0/tools/social_search/ starter_v0/tools/arxiv_search/ starter_v0/tools/cite_validator/
-git commit -m "feat(tools): upgrade social_search and add arxiv_search, cite_validator"
 git push origin main
 ```
 
-### 5.2. Khi nhân bản sang Repo cá nhân của từng thành viên để nộp LMS
-Sau khi repo chung đã hoàn chỉnh ở Mốc 7, từng thành viên (TV1..TV5) đẩy code lên repo cá nhân mang tên `K5-L3-DAY03-HoVaTen-MSSV-ResearchAgentToolEval`:
+### Quy tắc 6 — Các câu lệnh chuẩn dùng trong suốt buổi Lab
+
 ```bash
-git remote add my-personal https://github.com/<username>/K5-L3-DAY03-HoVaTen-MSSV-ResearchAgentToolEval.git
-git push -u my-personal main
+# 1. Kiểm tra kết nối Provider & chạy Unit Tests offline
+cd starter_v0
+python scripts/preflight_provider.py --provider openrouter
+pytest -v
+
+# 2. Chạy Eval cho các phiên bản v0, v1, v2, v3 (Suite Base, Group, Extension)
+python run_eval.py --provider openrouter --version v0 --suite base --eval-cases data/eval_base.json
+python run_eval.py --provider openrouter --version v1 --suite base --eval-cases data/eval_base.json
+python run_eval.py --provider openrouter --version v2 --suite base --eval-cases data/eval_base.json
+python run_eval.py --provider openrouter --version v3 --suite base --eval-cases data/eval_base.json
+python run_eval.py --provider openrouter --version v3 --suite group --eval-cases data/eval_group.json
+python run_eval.py --provider openrouter --version v3 --suite extension --eval-cases data/eval_research_extension.json
+
+# 3. Chạy Live Chat tạo transcript & Mở Web UI qua Cloudflare Tunnel
+python chat.py --provider openrouter --version v3
+streamlit run app.py
+cloudflared tunnel --url http://localhost:8501
 ```
 
 ---
 
-## 6. CHECKLIST KIỂM TRA TRƯỚC KHI BẤM NỘP BÀI TRÊN LMS
+## 6. CHECKLIST KIỂM TRA TRƯỚC KHI MỖI THÀNH VIÊN NỘP LÊN LMS
 
-- [ ] `pytest` chạy **PASS 100%** (bao gồm `test_tool_contract.py` và `test_tools_todo.py`).
-- [ ] `starter_v0/artifacts/version_log.csv` có tối thiểu **4 dòng**: `v0`, `v1`, `v2`, `v3` và điểm `v3 > v0`.
-- [ ] `starter_v0/data/eval_group.json` có đủ **10 test cases** hợp lệ (`cg_01` đến `cg_10`).
-- [ ] Có **4 tools mới** trong `starter_v0/tools/` kèm file `TOOL.md` cho mỗi tool (đạt điều kiện Bonus `> 3 tools`).
-- [ ] Có file giao diện `starter_v0/app.py` hoạt động tốt (đạt điều kiện Bonus UI).
-- [ ] `starter_v0/artifacts/chat_transcript.json` có ít nhất **3 lượt hội thoại thực tế**.
-- [ ] `starter_v0/artifacts/REPORT.md` đã điền đầy đủ cả **Phần A (A1–A3)** và **Phần B (B1–B3)**.
-- [ ] Có file `TEAM.md` ghi rõ danh sách 5 thành viên trong nhóm.
-- [ ] **Không có file `.env`** hay API key nào bị đẩy lên GitHub (`git status --ignored`).
+- [ ] **1.** Tên repository cá nhân đúng chuẩn: `K5-L3-DAY03-HoVaTen-MSSV-ResearchAgentToolEval` (và có file `TEAM.md` liệt kê đủ 5 thành viên).
+- [ ] **2.** **KHÔNG có file `.env`** hoặc bất kỳ API key / Telegram Bot Token nào bị lộ trong code hay báo cáo (`git status --ignored`).
+- [ ] **3.** `starter_v0/artifacts/version_log.csv` có đầy đủ ít nhất 4 dòng từ `v0`, `v1`, `v2`, `v3` với mã hash và tên file run khớp với thư mục `starter_v0/runs/*.json`.
+- [ ] **4.** `starter_v0/data/eval_group.json` có đủ **10 cases** do nhóm tự viết (5 single-turn + 5 multi-turn) và có ít nhất 1 case kiểm tra tool mới.
+- [ ] **5.** Đã đăng ký đầy đủ **4 tools mới** (kèm `TOOL.md`) và khi chạy lệnh `pytest` báo **`0 failed, 0 skipped`**.
+- [ ] **6.** Có file giao diện UI (`starter_v0/app.py`) và file log hội thoại thực tế trong `starter_v0/transcripts/*.transcript.json`.
+- [ ] **7.** `starter_v0/artifacts/REPORT.md` đã điền đầy đủ cả **Phần A** và **Phần B** bằng số liệu thật từ log.
